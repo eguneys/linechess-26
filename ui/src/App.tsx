@@ -40,9 +40,12 @@ function MainHome() {
   return (<>
     <main class='main'>
       <h1><A class="title" href='/'>LineChess<small class='com'>.com</small></A></h1>
-      <p> Explore, Build, and Share opening lines</p>
-      <p> Do Challenges on a Skill Tree </p>
-      <p> Grind the Leaderboards </p>
+      <p> Explore, Build, and Share opening lines.</p>
+      <p> Complete Challenges on a unique Skill Tree. </p>
+      <p> Compete on the Leaderboards. </p>
+      <p> Free, Open Source, No Ads, No Trackers.</p>
+      <p>For the 💔 of Chess</p>
+      <p><small>Login with Lichess to use certain features.</small></p>
 
       <section class='section-openings'>
         <h2>Openings</h2>

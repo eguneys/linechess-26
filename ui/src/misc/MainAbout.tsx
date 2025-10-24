@@ -6,11 +6,25 @@ export default function MainAbout() {
   return (<>
     <main class='main about'>
       <h1>About Linechess</h1>
+      <p>Tired of forgetting your openings? LineChess is your solution.</p>
+
       <p>
-        linechess.com is a free, open source chess platform, 
-        to allow sharing of chess opening lines, create playlists, 
-        participate in chess challenges via your Lichess.org activity,
-        and track your progress on public leaderboards.
+        LineChess is a free and open-source platform that helps you master chess openings.
+        Build your repertoire, organize lines into playlists, and share them effortlessly.
+      </p>
+
+      <p>
+        Then, put your knowledge to the test.
+        LineChess creates custom challenges from your Lichess.org activity—
+        like solving puzzles or beating bots while using your playlists.
+        Watch your progress grow in a visual skill tree and
+        compete for glory on public leaderboards.
+      </p>
+
+      <p>
+        Get a focused training routine without the distractions. 
+        LineChess is free, has no ads, no trackers, 
+        and only requires your Lichess login to unlock your potential.
       </p>
       <p class='center'>
         <span class='shine'>Please consider supporting the developer:</span>

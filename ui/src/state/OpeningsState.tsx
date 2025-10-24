@@ -6,7 +6,6 @@ export interface Paged<Content> {
     nb_pages: number
     page: number
     list: Content[]
-    _cache: Content[][]
 }
 
 export type OpeningsState = {
