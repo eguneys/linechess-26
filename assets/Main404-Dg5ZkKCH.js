@@ -1,0 +1,1 @@
+import{t as e,i as r,c as t,A as n}from"./index-Ch9Y3nW4.js";var i=e("<main class=main><h1>404");function m(){return(()=>{var a=i();return a.firstChild,r(a,t(n,{href:"/",children:"Go back Home"}),null),a})()}export{m as default};
