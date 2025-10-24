@@ -1,6 +1,5 @@
 import { A } from "@solidjs/router";
 import './MainLegal.scss'
-import Spoiler from "../components/Spoiler";
 
 export default function MainLegal() {
   return (<>
