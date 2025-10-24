@@ -1,0 +1,35 @@
+@use '../base_css/media';
+@use '../base_css/theme';
+
+.section-challenges {
+
+    padding: 1em 0;
+
+    .challenges {
+
+        display: grid;
+
+        grid-template-areas: 'skills'
+            'boards';
+
+        @include media.mq-at-least-col3 {
+            grid-template-areas: 'skills boards';
+        }
+
+
+        .skills {
+            grid-area: skills;
+        }
+
+        .boards {
+            grid-area: boards;
+        }
+
+        .skills,
+        .boards {
+            @include media.mq-at-least-col3 {
+                border-left: 1px solid theme.$dark-purple;
+            }
+        }
+    }
+}

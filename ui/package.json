@@ -1,0 +1,23 @@
+{
+  "name": "ui",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port=3000",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@badrap/result": "^0.3.1",
+    "@solidjs/router": "^0.15.3",
+    "solid-js": "^1.9.9"
+  },
+  "devDependencies": {
+    "@types/node": "^24.6.0",
+    "sass-embedded": "^1.93.2",
+    "typescript": "~5.9.3",
+    "vite": "^7.1.7",
+    "vite-plugin-solid": "^2.11.8"
+  }
+}

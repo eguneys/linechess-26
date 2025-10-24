@@ -1,0 +1,52 @@
+@use '../base_css/theme';
+
+.main.legal, .main.contact, .main.about {
+
+    .tint {
+        color: theme.$light-grey;
+    }
+
+    ul {
+        padding-left: 2em;
+    }
+
+
+    footer {
+        padding: 2em;
+    }
+}
+
+.main.about {
+    p.center {
+        display: flex;
+        flex-flow: column;
+        align-items: center;
+        gap: 1em;
+    }
+
+    $text-color: theme.$dark-blue;
+    $duration: 3s;
+
+    .shine {
+        font-weight: 600;
+background:
+        /* the shine layer */
+        linear-gradient(-45deg, #0000 40%, #fff5, #0000 60%) right/300% 100%,
+        /* the color layer*/
+        linear-gradient(45deg, theme.$orange, theme.$red, theme.$orange);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: #000;
+    animation: shine 5s infinite;
+}
+
+    @keyframes shine {
+        50% {
+            background-position: left;
+        }
+        100% {
+            background-position: right;
+        }
+    }
+}

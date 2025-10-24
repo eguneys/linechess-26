@@ -1,0 +1,38 @@
+@use '../base_css/media';
+@use '../base_css/theme';
+
+.section-openings {
+
+    padding: 1em 0;
+
+    .openings {
+
+        display: grid;
+
+        grid-template-areas: 'build'
+                'explore'
+                'playlist';
+        gap: 1em;
+
+        @include media.mq-at-least-col3 {
+        grid-template-areas: 'build explore playlist';
+        }
+
+
+        .build {
+            grid-area: build;
+        }
+
+        .explore {
+            grid-area: explore;
+        }
+
+        .playlist {
+            grid-area: playlist;
+        }
+
+        .build, .explore, .playlist {
+            border-left: 1px solid theme.$dark-purple;
+        }
+    }
+}

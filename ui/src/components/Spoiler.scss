@@ -1,0 +1,11 @@
+@use '../base_css/theme';
+
+span.spoiler {
+    cursor: pointer;
+    transition: .5s;
+
+    &.hidden {
+        background: theme.$light-grey;
+        color: theme.$light-grey;
+    }
+}

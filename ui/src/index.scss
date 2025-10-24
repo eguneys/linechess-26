@@ -1,0 +1,49 @@
+@use "./base_css/theme";
+
+@font-face {
+  font-family: 'Montserrat';
+  font-display: swap;
+  font-weight: 100 900;
+  src: url(/Montserrat/Montserrat-VariableFont_wght.ttf);
+}
+
+
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: calc(14px + 2*((100vw - 320px) / 880));
+  min-height: 100%;
+  box-sizing: border-box;
+}
+
+body {
+  display: flex;
+  color-scheme: light dark;
+  background: theme.$dark-blue;
+  color: theme.$white;
+}
+
+#root {
+  font-family: 'Montserrat';
+  line-height: 1.5;
+  font-weight: 400;
+
+
+  /*font-synthesis: none;*/
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: theme.$blue;
+  text-decoration: none;
+
+  &:visited {
+    color: theme.$lavender;
+  }
+}

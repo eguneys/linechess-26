@@ -1,0 +1,71 @@
+@use 'base_css/theme';
+
+body {
+    display: flex;
+    flex-flow: column;
+}
+
+h1, h2 {
+    color: theme.$light-peach;
+    font-weight: 400;
+    padding: 0.1em;
+}
+
+h3 {
+    color: theme.$orange;
+    font-weight: 500;
+    padding: 0.3em;
+}
+
+h4 {
+    color: theme.$orange;
+    font-weight: 400;
+    padding: 0.5em;
+}
+
+p {
+    padding: 0.3em;
+}
+
+#root {
+
+    display: grid;
+    grid-template-areas: '. . main . .'
+    '. . footer . .';
+
+    grid-template-columns: 18px 1fr minmax(auto, 1500px) 1fr 18px;
+
+    .main-wrap {
+        grid-area: main;
+    }
+    footer {
+        grid-area: footer;
+    }
+
+    .main-wrap {
+        display: flex;
+        flex-flow: column;
+
+
+        .main {
+            height: 100%;
+        }
+
+    }
+
+    footer {
+        display: flex;
+        justify-content: center;
+        gap: 1em;
+    }
+
+    h1 {
+        .com {
+            color: theme.$light-grey;
+        }
+
+        .title {
+            color: theme.$light-peach;
+        }
+    }
+}
