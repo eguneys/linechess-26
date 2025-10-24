@@ -17,10 +17,13 @@
         @include media.mq-at-least-col2 {
                 grid-template-areas: 'build build'
                     'explore playlist';
+
+                    grid-template-columns: 45vh 45vh;
         }
 
         @include media.mq-at-least-col3 {
         grid-template-areas: 'build explore playlist';
+        grid-template-columns: 60vh 3fr 2fr;
         }
 
 
@@ -38,6 +41,74 @@
 
         .build, .explore, .playlist {
             border-left: 1px solid theme.$dark-purple;
+            padding-left: 0.3em;
         }
+
+
+        .build {
+            display: flex;
+            flex-flow: column;
+            gap: 0.8em;
+
+            .board-wrap {
+                .board {
+                    aspect-ratio: 1;
+                }
+        
+                /* do custom board */
+                cg-container {
+                    box-shadow: 2px 3px 1px black;
+                }
+            }
+
+            .board-tools {
+                display: flex;
+                gap: 1em;
+                justify-content: flex-end;
+            }
+
+            .replay-wrap {
+                display: flex;
+                flex-flow: column;
+                gap: 0.4em;
+
+                .replay-tools {
+                    display: flex;
+                    gap: 1em;
+                    align-self: flex-end;
+                }
+            }
+
+            .tools {
+                padding-left: 1em;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 1em;
+
+                input {
+                    flex: 1;
+                    align-self: first baseline;
+                    margin-top: 0.8em;
+                }
+
+                a {
+                    -webkit-user-select: none;
+                    user-select: none;
+                    cursor: pointer;
+                }
+
+                .action {
+                    display: flex;
+                    flex-flow: column;
+                }
+            }
+        }
+
+        .board-tools,
+        .replay-wrap {
+            border-bottom: 1px solid theme.$lavender;
+        }
+
     }
 }

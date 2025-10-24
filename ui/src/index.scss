@@ -40,10 +40,50 @@ body {
 }
 
 a {
+  cursor: pointer;
   color: theme.$blue;
   text-decoration: none;
+
+  &:active {
+    text-decoration: underline;
+  }
 
   &:visited {
     color: theme.$lavender;
   }
+}
+
+input[type=text] {
+  padding: 0.72em;
+  min-width: 200px;
+
+  &:focus {
+    outline: none !important;
+    box-shadow: 0 0 2px theme.$dark-purple;
+  }
+}
+
+ul {
+  list-style: none;
+}
+
+
+/* width */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: theme.$white;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: theme.$light-grey;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: theme.$dark-grey;
 }

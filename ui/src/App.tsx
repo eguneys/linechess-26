@@ -45,7 +45,7 @@ function MainHome() {
       <p> Compete on the Leaderboards. </p>
       <p> Free, Open Source, No Ads, No Trackers.</p>
       <p>For the 💔 of Chess</p>
-      <p><small>Login with Lichess to use certain features.</small></p>
+      <p><small><A href='/lichess'>Login with Lichess</A> to make your data publicly available.</small></p>
 
       <section class='section-openings'>
         <h2>Openings</h2>
@@ -58,8 +58,11 @@ function MainHome() {
     </main>
     <footer>
       <A href="/">LineChess.com</A>
+      •
       <A href="/about">About</A>
+      •
       <A href="/legal">Legal</A>
+      •
       <A href="/contact">Contact</A>
     </footer>
   </>)
