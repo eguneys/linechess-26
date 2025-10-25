@@ -6,19 +6,18 @@
     padding: 1em 0;
 
     .openings {
-
         display: grid;
+        overflow: hidden;
 
         grid-template-areas: 'build'
                 'explore'
                 'playlist';
-        gap: 1em;
 
         @include media.mq-at-least-col2 {
-                grid-template-areas: 'build build'
-                    'explore playlist';
+                grid-template-areas: 'build explore'
+                    '. playlist';
 
-                    grid-template-columns: 45vh 45vh;
+                grid-template-columns: 1fr 1fr;
         }
 
         @include media.mq-at-least-col3 {
@@ -40,8 +39,7 @@
         }
 
         .build, .explore, .playlist {
-            border-left: 1px solid theme.$dark-purple;
-            padding-left: 0.3em;
+            border-left: 1px solid theme.$lavender;
         }
 
 
@@ -51,6 +49,7 @@
             gap: 0.8em;
 
             .board-wrap {
+                padding: 0 0.5em;
                 .board {
                     aspect-ratio: 1;
                 }
@@ -65,12 +64,23 @@
                 display: flex;
                 gap: 1em;
                 justify-content: flex-end;
+                padding: 0 1em;
             }
+        }
+
+        .explore {
+
 
             .replay-wrap {
+                position: relative;
                 display: flex;
                 flex-flow: column;
                 gap: 0.4em;
+                padding: 0.2em 1em;
+
+                .moves-wrap {
+                    height: 200px;
+                }
 
                 .replay-tools {
                     display: flex;
@@ -79,8 +89,10 @@
                 }
             }
 
+
+
             .tools {
-                padding-left: 1em;
+                padding: 0 1em;
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
@@ -110,5 +122,9 @@
             border-bottom: 1px solid theme.$lavender;
         }
 
+
+        .playlist {
+            position: relative;
+        }
     }
 }

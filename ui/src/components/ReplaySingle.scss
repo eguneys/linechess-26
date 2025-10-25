@@ -1,37 +1,48 @@
 @use '../base_css/theme';
 
-.replay {
-    display: flex;
-    flex-wrap: wrap;
+.moves-wrap {
+
     overflow-y: scroll;
-    max-height: 100px;
     background: theme.$dark-grey;
-    padding: 0.8em;
     box-shadow: inset 1px 1px 3px theme.$orange;
     border-radius: 2px;
-    line-height: 1.2em;
 
-    .move {
-        cursor: pointer;
-        font-weight: 600;
-        color: theme.$yellow;
-        border-radius: 3px;
-        padding: 0.2em;
+    padding-bottom: 2em;
 
-        .index {
-            font-weight: 700;
-            color: theme.$blue;
-            margin-right: 0.1em;
-        }
+    .replay {
+        padding: 0.8em;
+        line-height: 1.2em;
 
-        &.cursor {
+        .move {
+            font-family: 'Noto Chess';
+            display: inline-block;
+            cursor: pointer;
+            font-weight: 500;
+            color: theme.$yellow;
+            border-radius: 3px;
+            padding: 0.2em;
 
-            & .index {
-                color: theme.$brown;
+            .index {
+                font-family: 'Montserrat';
+                font-weight: 400;
+                color: theme.$blue;
+                margin-right: 0.1em;
             }
 
-            background: theme.$yellow;
-            color: theme.$dark-blue;
+            &:hover {
+                background: theme.$pink;
+            }
+
+            &.cursor {
+
+                & .index {
+                    color: theme.$brown;
+                }
+
+                background: theme.$yellow;
+                color: theme.$dark-blue;
+            }
+
         }
     }
 }

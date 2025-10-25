@@ -7,6 +7,11 @@
   src: url(/fonts/Montserrat/Montserrat-VariableFont_wght.ttf);
 }
 
+@font-face {
+  font-family: 'Noto Chess';
+  font-display: block;
+  src: url('/fonts/lichess-chess.woff2') format('woff2');
+}
 
 * {
   padding: 0;

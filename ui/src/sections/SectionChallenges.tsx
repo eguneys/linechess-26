@@ -1,6 +1,6 @@
 import './SectionChallenges.scss'
 
-export default () => {
+export const SectionChallenges = () => {
     return (<>
     <div class='challenges'>
         <div class='skills'>

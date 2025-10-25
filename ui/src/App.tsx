@@ -2,8 +2,8 @@ import { lazy, type JSX } from 'solid-js'
 import './App.scss'
 import { Router, Route, A } from '@solidjs/router'
 
-import SectionOpenings from './sections/SectionOpenings'
-import SectionChallenges from './sections/SectionChallenges'
+import { SectionOpenings } from './sections/SectionOpenings'
+import { SectionChallenges } from './sections/SectionChallenges'
 
 const MainLegal = lazy(() => import('./misc/MainLegal'))
 const Main404 = lazy(() => import('./misc/Main404'))

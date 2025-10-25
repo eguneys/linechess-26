@@ -1,12 +1,13 @@
 import { make_onWheel, PlayUciBoard } from '../components/PlayUciBoard'
 import './SectionOpenings.scss'
-import { batch, createMemo, createSignal } from 'solid-js'
+import { batch, createEffect, createMemo, createSignal } from 'solid-js'
 import { MeetButton } from '../components/MeetButton'
 import ReplaySingle from '../components/ReplaySingle'
 import type { Color, FEN, Key } from 'chessground/types'
 import { fen_pos, fen_turn, steps_add_uci, steps_export_PGN, type SAN, type Step, type UCI } from '../components/steps'
 import { opposite, parseSquare } from 'chessops'
 import { INITIAL_FEN } from 'chessops/fen'
+import SortableList from '../components/SortableList'
 
 
 type OpeningsBuildState = {
@@ -114,7 +115,7 @@ const OpeningsBuildContext = (): [OpeningsBuildState, OpeningsBuildActions] => {
 }
 
 
-export default () => {
+export const SectionOpenings = () => {
 
     let [obs, {
 
@@ -125,6 +126,8 @@ export default () => {
         clear_steps,
         delete_after
     }] = OpeningsBuildContext()
+
+    "b1c3 b8c6 c3b1 c6b8 ".repeat(30).trim().split(" ").forEach(add_uci_and_goto_it)
 
     const play_orig_key = (orig: Key, dest: Key) => {
 
@@ -166,6 +169,13 @@ export default () => {
         set_copied(false)
     }
 
+
+    const [playlist, set_playlist] = createSignal(["Sicilian", "French", "QGD", 'Scandinavian'])
+
+    createEffect(() => {
+        console.log(playlist())
+    })
+
     return (<>
     <div class='openings'>
         <div class='build'>
@@ -178,6 +188,9 @@ export default () => {
             <div class='board-tools'>
                 <a onClick={on_flip}>Flip</a>
             </div>
+        </div>
+        <div class='explore'>
+            <h3>Explore</h3>
             <div class='replay-wrap'>
                     <ReplaySingle fallback={<>
                         <span>Play an opening line to save it.</span>
@@ -188,6 +201,8 @@ export default () => {
                     <a onClick={delete_after}>Delete after</a>
                 </div>
             </div>
+
+
             <div class='tools'>
                 <input required={true} type='text' placeholder="Opening Line Name"></input>
                 <div class='action'>
@@ -196,12 +211,29 @@ export default () => {
                 </div>
             </div>
         </div>
-        <div class='explore'>
-            <h3>Explore</h3>
-        </div>
         <div class='playlist'>
             <h3>Playlist</h3>
+            <SortableList 
+                    children={OpeningPlayListItem} 
+                    dragging={OpeningPlayListItemDragging} 
+                    portal_selector={document.querySelector('.sortable-list-portal')!} 
+                    list={playlist()} 
+                    set_list={set_playlist} />
+
+            <div class="sortable-list-portal"></div>
         </div>
     </div>
+    </>)
+}
+
+const OpeningPlayListItem = (item: string) => {
+    return (<>
+    <div class='number'>{item}</div>
+    </>)
+}
+
+const OpeningPlayListItemDragging = (item: string) => {
+    return (<>
+        <div class='number2'>{item} woop woop!</div>
     </>)
 }
