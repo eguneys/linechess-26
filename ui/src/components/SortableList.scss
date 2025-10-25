@@ -1,14 +1,22 @@
-.sortable-list {
-    .draggable {
-        cursor: pointer;
-    }
+.sortable-list-wrap {
 
-    .dragging {
-        visibility: hidden;
+    padding: 10px 0;
+    position: relative;
+    overflow-y: scroll;
+
+    .sortable-list {
+        .draggable {
+            cursor: pointer;
+        }
+
+        .dragging {
+            visibility: hidden;
+        }
     }
 }
 
 .sortable-list-portal {
+    pointer-events: none;
     position: absolute;
     top: 0;
     left: 0;
@@ -16,4 +24,12 @@
     right: 0;
     width: 100%;
     height: 100%;
+
+    &.active {
+        pointer-events: all;
+    }
+
+    .sortable-list-dragging {
+        cursor: pointer;
+    }
 }

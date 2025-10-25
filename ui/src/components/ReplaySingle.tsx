@@ -23,7 +23,6 @@ export default function ReplaySingle(props: { fallback: JSX.Element, san_moves: 
         }
 
         let top = target.offsetTop - cont.offsetHeight / 2 + target.offsetHeight
-        console.log(top)
         cont.scrollTo({ behavior: 'smooth', top })
     })
 

@@ -12,6 +12,7 @@ export type DragHandler = {
     update(delta: number): void
     has_moved_after_last_down: boolean
     disconnect(): void
+    manual_trigger_down_hook(e: XY): void
 }
 
 export function DragHandler(el: HTMLElement, on_just_down: () => void) {
@@ -87,6 +88,10 @@ export function DragHandler(el: HTMLElement, on_just_down: () => void) {
         },
         disconnect() {
             tm_cleanup()
+        },
+        manual_trigger_down_hook(e: XY) {
+
+            hooks.on_down(e)
         }
     }
 }

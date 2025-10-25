@@ -11,6 +11,9 @@ importers:
       '@badrap/result':
         specifier: ^0.3.1
         version: 0.3.1
+      '@solid-primitives/memo':
+        specifier: ^1.4.3
+        version: 1.4.3(solid-js@1.9.9)
       '@solidjs/router':
         specifier: ^0.15.3
         version: 0.15.3(solid-js@1.9.9)
@@ -493,6 +496,21 @@ packages:
     resolution: {integrity: sha512-TAcgQh2sSkykPRWLrdyy2AiceMckNf5loITqXxFI5VuQjS5tSuw3WlwdN8qv8vzjLAUTvYaH/mVjSFpbkFbpTg==}
     cpu: [x64]
     os: [win32]
+
+  '@solid-primitives/memo@1.4.3':
+    resolution: {integrity: sha512-CA+n9yaoqbYm+My5tY2RWb6EE16tVyehM4GzwQF4vCwvjYPAYk1JSRIVuMC0Xuj5ExD2XQJE5E2yAaKY2HTUsg==}
+    peerDependencies:
+      solid-js: ^1.6.12
+
+  '@solid-primitives/scheduled@1.5.2':
+    resolution: {integrity: sha512-/j2igE0xyNaHhj6kMfcUQn5rAVSTLbAX+CDEBm25hSNBmNiHLu2lM7Usj2kJJ5j36D67bE8wR1hBNA8hjtvsQA==}
+    peerDependencies:
+      solid-js: ^1.6.12
+
+  '@solid-primitives/utils@6.3.2':
+    resolution: {integrity: sha512-hZ/M/qr25QOCcwDPOHtGjxTD8w2mNyVAYvcfgwzBHq2RwNqHNdDNsMZYap20+ruRwW4A3Cdkczyoz0TSxLCAPQ==}
+    peerDependencies:
+      solid-js: ^1.6.12
 
   '@solidjs/router@0.15.3':
     resolution: {integrity: sha512-iEbW8UKok2Oio7o6Y4VTzLj+KFCmQPGEpm1fS3xixwFBdclFVBvaQVeibl1jys4cujfAK5Kn6+uG2uBm3lxOMw==}
@@ -1300,6 +1318,20 @@ snapshots:
 
   '@rollup/rollup-win32-x64-msvc@4.52.5':
     optional: true
+
+  '@solid-primitives/memo@1.4.3(solid-js@1.9.9)':
+    dependencies:
+      '@solid-primitives/scheduled': 1.5.2(solid-js@1.9.9)
+      '@solid-primitives/utils': 6.3.2(solid-js@1.9.9)
+      solid-js: 1.9.9
+
+  '@solid-primitives/scheduled@1.5.2(solid-js@1.9.9)':
+    dependencies:
+      solid-js: 1.9.9
+
+  '@solid-primitives/utils@6.3.2(solid-js@1.9.9)':
+    dependencies:
+      solid-js: 1.9.9
 
   '@solidjs/router@0.15.3(solid-js@1.9.9)':
     dependencies:

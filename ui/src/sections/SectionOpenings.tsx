@@ -1,6 +1,6 @@
 import { make_onWheel, PlayUciBoard } from '../components/PlayUciBoard'
 import './SectionOpenings.scss'
-import { batch, createEffect, createMemo, createSignal } from 'solid-js'
+import { batch, createMemo, createSignal, For } from 'solid-js'
 import { MeetButton } from '../components/MeetButton'
 import ReplaySingle from '../components/ReplaySingle'
 import type { Color, FEN, Key } from 'chessground/types'
@@ -127,7 +127,7 @@ export const SectionOpenings = () => {
         delete_after
     }] = OpeningsBuildContext()
 
-    "b1c3 b8c6 c3b1 c6b8 ".repeat(30).trim().split(" ").forEach(add_uci_and_goto_it)
+    //"b1c3 b8c6 c3b1 c6b8 ".repeat(30).trim().split(" ").forEach(add_uci_and_goto_it)
 
     const play_orig_key = (orig: Key, dest: Key) => {
 
@@ -170,11 +170,8 @@ export const SectionOpenings = () => {
     }
 
 
-    const [playlist, set_playlist] = createSignal(["Sicilian", "French", "QGD", 'Scandinavian'])
-
-    createEffect(() => {
-        console.log(playlist())
-    })
+    const [playlist, set_playlist] = createSignal("1.e4 Sicilian Defense,1.e4 e5 French Defense,1.d4 Queen's Gambit Declined,Scandinavian ".repeat(10).trim().split(','))
+    const [lines, set_lines] = createSignal("1.e4 1.d4 1.f4 1.g5 ".repeat(10).trim().split(' '))
 
     return (<>
     <div class='openings'>
@@ -212,16 +209,30 @@ export const SectionOpenings = () => {
             </div>
         </div>
         <div class='playlist'>
-            <h3>Playlist</h3>
-            <SortableList 
-                    children={OpeningPlayListItem} 
-                    dragging={OpeningPlayListItemDragging} 
-                    portal_selector={document.querySelector('.sortable-list-portal')!} 
-                    list={playlist()} 
-                    set_list={set_playlist} />
 
-            <div class="sortable-list-portal"></div>
+            <h3>Playlist</h3>
+                <div class='lists'>
+                    <ul>
+                        <For each={playlist()}>{item =>
+                            <li class='item'>
+                                <div class='title'>{item}</div>
+                                <div class='nb'>50 lines</div>
+                            </li>
+                        }</For>
+                    </ul>
+                </div>
+                <div class='lines'>
+                    <SortableList
+                        children={OpeningPlayListItem}
+                        dragging={OpeningPlayListItemDragging}
+                        portal_selector={document.querySelector('.sortable-list-portal')!}
+                        list={lines()}
+                        set_list={set_lines} />
+                </div>
+
         </div>
+        <div class="sortable-list-portal"></div>
+
     </div>
     </>)
 }
