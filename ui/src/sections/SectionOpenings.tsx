@@ -170,7 +170,7 @@ export const SectionOpenings = () => {
     }
 
 
-    const [playlist, set_playlist] = createSignal("1.e4 Sicilian Defense,1.e4 e5 French Defense,1.d4 Queen's Gambit Declined,Scandinavian ".repeat(10).trim().split(','))
+    const [playlist, _set_playlist] = createSignal("1.e4 Sicilian Defense,1.e4 e5 French Defense,1.d4 Queen's Gambit Declined,Scandinavian ".repeat(10).trim().split(','))
     const [lines, set_lines] = createSignal("1.e4 1.d4 1.f4 1.g5 ".repeat(10).trim().split(' '))
 
     return (<>
@@ -211,8 +211,17 @@ export const SectionOpenings = () => {
         <div class='playlist'>
 
             <h3>Playlist</h3>
+            <div class='filters'>
+                    <div class="tab active">Mine</div>
+                    <div class="tab">Liked</div>
+                    <div class="tab">Global</div>
+                </div>
                 <div class='lists'>
                     <ul>
+                        <li class='item-new'>
+                            <div class='icon'>+</div>
+                            <div class='title'>Create New Playlist</div>
+                        </li>
                         <For each={playlist()}>{item =>
                             <li class='item'>
                                 <div class='title'>{item}</div>
@@ -220,6 +229,10 @@ export const SectionOpenings = () => {
                             </li>
                         }</For>
                     </ul>
+                </div>
+                <div class='info'>
+                    <div class='title'>1.e4 Sicilian Defense Scandinavian Defense More Alekhine Queen's G D</div>
+                    <div class='more'>...</div>
                 </div>
                 <div class='lines'>
                     <SortableList
