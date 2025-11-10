@@ -1,0 +1,18 @@
+@font-face {
+  font-family: 'lichess';
+  font-display: block;
+  src: url(/fonts/lichess.ttf);
+}
+
+
+[data-icon]::before {
+    line-height: 1em;
+    font-size: 1.2em;
+    vertical-align: middle;
+    font-family: 'lichess';
+    font-style: normal;
+    font-weight: normal;
+    text-transform: none;
+    content: attr(data-icon);
+    opacity: 0.9;
+}

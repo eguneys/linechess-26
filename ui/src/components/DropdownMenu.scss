@@ -1,0 +1,38 @@
+button.dropdown-menu-toggle-button {
+    padding: 0.5em;
+    cursor: pointer;
+}
+
+.dropdown-menu-portal {
+    touch-action: none;
+    pointer-events: none;
+    &.active {
+        pointer-events: all;
+    }
+
+
+
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+
+    .dropdown-menu {
+        position: absolute;
+        min-width: 200px;
+        border-radius: 2px;
+        box-shadow: 2px 3px 3px rgba(0, 0, 0, 0.8);
+
+        overflow: hidden;
+        visibility: hidden;
+        z-index: 100;
+
+        &.show {
+            visibility: visible;
+        }
+    }
+
+}

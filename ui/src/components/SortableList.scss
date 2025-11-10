@@ -16,6 +16,7 @@
 }
 
 .sortable-list-portal {
+    touch-action: none;
     pointer-events: none;
     position: absolute;
     top: 0;

@@ -8,6 +8,8 @@ import { fen_pos, fen_turn, steps_add_uci, steps_export_PGN, type SAN, type Step
 import { opposite, parseSquare } from 'chessops'
 import { INITIAL_FEN } from 'chessops/fen'
 import SortableList from '../components/SortableList'
+import DropdownMenu from '../components/DropdownMenu'
+import Icon, { Icons } from '../components/Icon'
 
 
 type OpeningsBuildState = {
@@ -178,7 +180,7 @@ export const SectionOpenings = () => {
         <div class='build'>
             <h3>Build</h3>
             <div class='board-wrap'>
-                <div class='board' onWheel={make_onWheel(set_on_wheel_board)}>
+                <div class='board' on:wheel={{ handleEvent: make_onWheel(set_on_wheel_board), passive: true }}>
                     <PlayUciBoard fen={obs.fen} play_orig_key={play_orig_key} turn_color={obs.turn_color} movable_color={obs.turn_color} orientation={orientation()} last_move_uci={obs.last_move_uci} />
                 </div>
             </div>
@@ -232,7 +234,18 @@ export const SectionOpenings = () => {
                 </div>
                 <div class='info'>
                     <div class='title'>1.e4 Sicilian Defense Scandinavian Defense More Alekhine Queen's G D</div>
-                    <div class='more'>...</div>
+                    <div class='more'>
+                        <DropdownMenu
+                            portal_selector={document.querySelector('.dropdown-menu-portal')!}
+                            button={
+                                <Icon icon={Icons.Gear}/>
+                            }>
+                            <ul>
+                                <li>Edit <Icon icon={Icons.Gears}></Icon></li>
+                                <li class='red'>Delete <Icon icon={Icons.Delete}></Icon></li>
+                            </ul>
+                        </DropdownMenu>
+                    </div>
                 </div>
                 <div class='lines'>
                     <SortableList
@@ -245,7 +258,7 @@ export const SectionOpenings = () => {
 
         </div>
         <div class="sortable-list-portal"></div>
-
+        <div class="dropdown-menu-portal"></div>
     </div>
     </>)
 }

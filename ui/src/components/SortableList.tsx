@@ -221,7 +221,6 @@ export default function SortableList<Item, U extends JSX.Element>(props: {
         }
 
 
-
         drag.manual_trigger_down_hook(xy)
         e.preventDefault()
 
