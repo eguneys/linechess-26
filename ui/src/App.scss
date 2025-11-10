@@ -1,4 +1,6 @@
 @use 'base_css/theme';
+@use 'base_css/media';
+
 
 body {
     display: flex;
@@ -29,11 +31,18 @@ p {
 
 #root {
 
+    --main-margin: 18px;
+
+    @include media.mq-is-col1 {
+        --main-margin: 0px;
+    }
+
     display: grid;
     grid-template-areas: '. . main . .'
     '. . footer . .';
 
-    grid-template-columns: 18px 1fr minmax(auto, 1500px) 1fr 18px;
+    grid-template-columns: var(--main-margin) 1fr minmax(auto, 1500px) 1fr var(--main-margin);
+
 
     .main-wrap {
         grid-area: main;

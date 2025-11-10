@@ -14,7 +14,6 @@
                 'explore'
                 'playlist';
 
-        grid-template-columns: 80vh;
         grid-template-rows: repeat(3, 90vh);
 
         @include media.mq-at-least-col2 {
