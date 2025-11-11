@@ -12,12 +12,11 @@ export type LichessUsername = string
 
 export type OpeningsLine = {
     _id: OpeningsLineId
-    author: LichessUsername
+    _playlist_id: OpeningsPlaylistId
     name: string
     moves: UCIMoves
     orientation: Color
     nb_likes: number
-    nb_saved: number
     nb_wdl: [number, number, number]
 }
 
@@ -27,6 +26,6 @@ export type OpeningsPlaylist = {
     _id: OpeningsPlaylistId
     author: LichessUsername
     name: string
-    lines: OpeningsLineId[]
     nb_likes: number
+    nb_lines: number
 }

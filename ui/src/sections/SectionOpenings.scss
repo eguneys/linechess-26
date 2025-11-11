@@ -179,11 +179,11 @@
                                 background: theme.$dark-grey;
                                 border-radius: 8px;
                                 text-align: center;
-
                             }
                             .title {
                                 font-size: .87em;
 
+                                text-align: center;
                             }
 
 
@@ -291,6 +291,7 @@
         }
 
 
+
         .dropdown-menu-portal {
             .dropdown-menu {
                 background: theme.$light-grey;
@@ -304,7 +305,7 @@
                     }
                 }
 
-                ul li, ul li .popup-menu-toggle-button {
+                ul li, ul li div {
                     flex: 1;
 
                         &:hover {
@@ -318,7 +319,7 @@
                         justify-content: space-between;
                 }
 
-                ul li.red .popup-menu-toggle-button {
+                ul li.red {
                     color: theme.$red;
                 }
 
@@ -327,13 +328,48 @@
 
 
                 .modal-portal {
+
+                    .add-to-playlist-modal-body {
+
+                        display: flex;
+                        flex-flow: column;
+                        gap: 1em;
+
+                        .recent {
+                            border-bottom: 1px solid theme.$light-peach;
+                        
+                        }
+
+                        .new-playlist-float {
+                            align-self: flex-end;
+                        }
+                    }
+
+
                     .sb-modal-content {
+
+                        border: 1px solid theme.$light-peach;
+
                         background: theme.$dark-grey;
                         border-radius: 8px;
+                        min-width: 70vw;
+
+
+                        @include media.mq-is-col1 {
+                            min-width: 80vw;
+                        }
+
+                        @include media.mq-at-least-col2 {
+                            min-width: 60vw;
+                        }
+
+                        @include media.mq-at-least-col3 {
+                            min-width: 50vw;
+                        }
                     }
 
                     .sb-modal-body {
-                        padding: 1em;
+                        padding: 0.5em;
                     }
 
                     .sb-modal-footer {
@@ -346,15 +382,17 @@
                     .sb-modal-header {
                         display: flex;
                         align-items: center;
-                        h3 {
+                        font-size: 1.2em;
+                        h2, h3 {
+                            font-weight: bold;
                                 color: theme.$white;
+                                flex: 1;
                             }
-                        padding: 0.2em;
+                        padding: 0.2em 0.5em;
 
                         border-bottom: 1px solid theme.$light-peach;
 
                         .close {
-                            justify-self: flex-end;
                             padding: 0.3em;
                             cursor: pointer;
                             border-radius: 50%;
@@ -369,6 +407,12 @@
                                 color: theme.$dark-blue;
                             }
                         }
+                    }
+
+                    .sb-modal-body {
+                        h3 {
+                                color: theme.$white;
+                            }
                     }
                 }
     }

@@ -7,6 +7,7 @@ import './ModalBlocks.scss'
 export type WrappedModelContentProps = {
     open: Accessor<boolean>,
     toggle: (open?: boolean | unknown) => void
+    set_hold_close_outside: (hold_close: boolean) => void
 }
 
 export type ModalProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, "children"> & 
@@ -27,6 +28,7 @@ export const Modal = (props: ModalProps) => {
         "close_on_click_outside"
     ])
 
+    const [hold_close_outside, set_hold_close_outside] = createSignal(false)
     const [open, set_open] = createSignal(local.open)
 
     createEffect(() => set_open(local.open))
@@ -37,13 +39,13 @@ export const Modal = (props: ModalProps) => {
     get_elements(
         local.children,
         (node) => node.className.indexOf('sb-modal-content') !== -1,
-        [{open, toggle}]
+        [{open, toggle, set_hold_close_outside}]
     ) ?? [])
 
     const other_children = createMemo(() =>
         get_elements(local.children,
             (node) => node.className.indexOf('sb-modal-content') === -1,
-            [{ open, toggle }]
+            [{ open, toggle, set_hold_close_outside }]
         )
     )
 
@@ -58,6 +60,9 @@ export const Modal = (props: ModalProps) => {
         children: modal_content(),
         onClick: createMemo(() =>
             local.close_on_click_outside ? (ev: MouseEvent) => {
+                if (hold_close_outside()) {
+                    return
+                }
                 const target = ev.target as HTMLElement
                 if (!modal_content().some((content) => content?.contains(target))) {
                     toggle(false)

@@ -22,7 +22,7 @@ button.action-button {
         background: theme.$white;
 
         &:hover {
-           background: color.adjust(theme.$white, $lightness: 30%);
+           background: theme.$light-grey;
         }
     }
 
@@ -30,7 +30,7 @@ button.action-button {
         background: theme.$white;
 
         &:hover {
-           background: theme.$white;
+           background: theme.$light-grey;
         }
     }
 }

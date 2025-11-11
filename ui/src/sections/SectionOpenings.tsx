@@ -1,6 +1,6 @@
 import { make_onWheel, PlayUciBoard } from '../components/PlayUciBoard'
 import './SectionOpenings.scss'
-import { batch, createMemo, createSignal, For } from 'solid-js'
+import { batch, createEffect, createMemo, createSignal, For, onCleanup } from 'solid-js'
 import { MeetButton } from '../components/MeetButton'
 import ReplaySingle from '../components/ReplaySingle'
 import type { Color, FEN, Key } from '@lichess-org/chessground/types'
@@ -207,10 +207,18 @@ export const SectionOpenings = () => {
 
 
             <div class='tools'>
-                <input required={true} type='text' placeholder="Opening Line Name"></input>
+                <TextInputHighlight size={30} on_keyup={() => {}} placeholder="Opening Line Name"></TextInputHighlight>
                 <div class='action'>
                 <MeetButton meet={true}>Save</MeetButton>
-                <a><small>+ Add to Playlist</small></a>
+            <Modal
+                close_on_click_outside={true}
+                portal_selector={document.querySelector('.modal-portal')!}>
+                {({ toggle, set_hold_close_outside }) =>
+                    <>
+                        <a onClick={() => toggle(true)}><small>+ Add to Playlist</small></a>
+                        <AddToPlaylistModalContent toggle={toggle} set_hold_close_outside={set_hold_close_outside} />
+                    </>
+                }</Modal>
                 </div>
             </div>
         </div>
@@ -224,10 +232,19 @@ export const SectionOpenings = () => {
                 </div>
                 <div class='lists'>
                     <ul>
-                        <li class='item-new'>
+            <Modal
+                close_on_click_outside={true}
+                portal_selector={document.querySelector('.modal-portal')!}>
+                {({ toggle }) =>
+                    <>
+
+                        <li onClick={() => toggle(true)} class='item-new'>
                             <div class='icon'>+</div>
                             <div class='title'>Create New Playlist</div>
                         </li>
+                        <CreateNewPlaylistModalContent toggle={toggle} />
+                    </>
+                }</Modal>
                         <For each={playlist()}>{item =>
                             <li class='item'>
                                 <div class='title'>{item}</div>
@@ -237,20 +254,8 @@ export const SectionOpenings = () => {
                     </ul>
                 </div>
                 <div class='info'>
-                    <div class='title'>1.e4 Sicilian Defense Scandinavian Defense More Alekhine Queen's G D</div>
-                    <div class='more'>
-                        <Heart nb_heart={900} is_heart={false} on_heart={() => { }} />
-                        <DropdownMenu
-                            portal_selector={document.querySelector('.dropdown-menu-portal')!}
-                            button={
-                                <Icon icon={Icons.Gear}/>
-                            }>
-                            <ul>
-                                <li>Edit <Icon icon={Icons.Gears}></Icon></li>
-                                <li class='red'>Delete <Icon icon={Icons.Delete}></Icon></li>
-                            </ul>
-                        </DropdownMenu>
-                    </div>
+                    <PlaylistInfo/>
+
                 </div>
                 <div class='lines'>
                     <SortableList
@@ -268,6 +273,45 @@ export const SectionOpenings = () => {
     </div>
     </>)
 }
+
+
+const PlaylistInfo = () => {
+
+
+    const [is_edit_playlist_item_modal_open, set_is_edit_playlist_item_modal_open] = createSignal(false, { equals: false })
+
+    return (<>
+        <div class='title'>1.e4 Sicilian Defense Scandinavian Defense More Alekhine Queen's G D</div>
+        <div class='more'>
+            <Heart nb_heart={900} is_heart={false} on_heart={() => { }} />
+            <DropdownMenu
+                portal_selector={document.querySelector('.dropdown-menu-portal')!}
+                button={
+                    <Icon icon={Icons.Gear} />
+                }>
+                <ul>
+                    <li>
+                        <div onClick={() => set_is_edit_playlist_item_modal_open(true)}>
+                            Edit <Icon icon={Icons.Gears}></Icon>
+                        </div>
+                    </li>
+                    <li class='red'>Delete <Icon icon={Icons.Delete}></Icon></li>
+                </ul>
+            </DropdownMenu>
+            <Modal
+                close_on_click_outside={true}
+                open={is_edit_playlist_item_modal_open()}
+                portal_selector={document.querySelector('.modal-portal')!}>
+                {({ toggle }) =>
+                    <>
+
+                        <EditPlaylistItemModalContent toggle={toggle} />
+                    </>
+                }</Modal>
+        </div>
+    </>)
+}
+
 
 const OpeningPlayListItem = (item: string) => {
 
@@ -341,6 +385,135 @@ const EditLineModalContent = (props: { toggle: (open?: boolean) => void }) => {
                     Ok
                 </ActionButton>
             </ModalFooter>
+        </ModalContent>
+    </>)
+}
+
+
+
+
+const EditPlaylistItemModalContent = (props: { toggle: (open?: boolean) => void }) => {
+
+
+    const on_playlist_name_changed = (value: string, is_submit: boolean) => {
+        if (is_submit) {
+            console.log(value)
+            props.toggle(false)
+        }
+
+    }
+
+    return (<>
+        <ModalContent>
+            <ModalHeader>
+                <h3>Edit Playlist</h3> 
+
+            </ModalHeader>
+            <ModalBody>
+                <TextInputHighlight placeholder="Playlist Name" on_keyup={on_playlist_name_changed}/>
+            </ModalBody>
+            <ModalFooter>
+                <ActionButton action={Actions.Cancel} onClick={() => props.toggle(false)}>
+                    Cancel
+                </ActionButton>
+                <ActionButton action={Actions.Ok} onClick={() => props.toggle(false)}>
+                    Ok
+                </ActionButton>
+            </ModalFooter>
+        </ModalContent>
+    </>)
+}
+
+
+const CreateNewPlaylistModalContent = (props: { toggle: (open?: boolean) => void }) => {
+
+
+    const on_playlist_name_changed = (value: string, is_submit: boolean) => {
+        if (is_submit) {
+            console.log(value)
+            props.toggle(false)
+        }
+
+    }
+
+    return (<>
+        <ModalContent>
+            <ModalHeader>
+                <h3>Create New Playlist</h3> 
+
+            </ModalHeader>
+            <ModalBody>
+                <TextInputHighlight placeholder="Playlist Name" on_keyup={on_playlist_name_changed}/>
+            </ModalBody>
+            <ModalFooter>
+                <ActionButton action={Actions.Cancel} onClick={() => props.toggle(false)}>
+                    Cancel
+                </ActionButton>
+                <ActionButton action={Actions.Ok} onClick={() => props.toggle(false)}>
+                    Create
+                </ActionButton>
+            </ModalFooter>
+        </ModalContent>
+    </>)
+}
+
+
+
+const AddToPlaylistModalContent = (props: { toggle: (open?: boolean) => void, set_hold_close_outside: (hold_close: boolean) => void }) => {
+
+
+    const CreateNewPlaylistHoldingModalContent = (local: { 
+        toggle: (open?: boolean) => void, 
+        open: () => boolean }) => {
+
+        createEffect(() => {
+            props.set_hold_close_outside(local.open())
+        })
+
+        onCleanup(() => {
+            props.set_hold_close_outside(false)
+        })
+
+        return (<>
+            <ActionButton action={Actions.Normal} onClick={() => local.toggle(true)}>
+                + New Playlist
+            </ActionButton>
+            <CreateNewPlaylistModalContent toggle={local.toggle} />
+        </>)
+    }
+
+
+    return (<>
+        <ModalContent>
+            <ModalHeader>
+                <h2>Add To Playlist</h2> 
+                <div onClick={() => props.toggle(false)} class='close'>
+                    <Icon icon={Icons.CrossX}></Icon>
+                </div>
+            </ModalHeader>
+            <ModalBody>
+                <div class='add-to-playlist-modal-body'>
+                <h3>Recent</h3>
+                <div class='recent'>
+                </div>
+                <h3>All</h3>
+                <div class='all'>
+
+                </div>
+                <div class='new-playlist-float'>
+                        <Modal
+                            
+                            close_on_click_outside={true}
+                            portal_selector={document.querySelector('.modal-portal')!}>
+                            {({ open, toggle }) =>
+                                <>
+                                    <CreateNewPlaylistHoldingModalContent toggle={toggle} open={open} />
+                                </>
+                            }</Modal>
+
+                </div>
+                </div>
+            </ModalBody>
         </ModalContent>
     </>)
 }

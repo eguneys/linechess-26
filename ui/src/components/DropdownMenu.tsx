@@ -45,7 +45,7 @@ export default (props: { portal_selector: HTMLElement, children: JSX.Element, bu
 
     function close_on_click(e: MouseEvent) {
         if ($el_menu === undefined || $el_menu.contains(e.target as Node)) {
-            return
+            //return
         }
         set_is_show(false)
     }
