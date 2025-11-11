@@ -1,4 +1,4 @@
-import { createEffect, createSignal, on, onCleanup, onMount, type JSX } from "solid-js"
+import { createEffect, createSignal, onCleanup, onMount, Show, type JSX } from "solid-js"
 import './DropdownMenu.scss'
 import { Portal } from "solid-js/web"
 
@@ -6,7 +6,7 @@ export default (props: { portal_selector: HTMLElement, children: JSX.Element, bu
 
     let $el_menu: HTMLDivElement | undefined
     let $el_btn: HTMLButtonElement | undefined
-    const [is_show, set_is_show] = createSignal(false, { equals: false })
+    const [is_show, set_is_show] = createSignal(false)
 
     createEffect(() => {
         is_show()
@@ -35,35 +35,46 @@ export default (props: { portal_selector: HTMLElement, children: JSX.Element, bu
 
     onCleanup(() => {
         window.removeEventListener('resize', on_resize)
-        props.portal_selector.removeEventListener('click', close_on_click)
+        document.removeEventListener('click', close_on_click)
     })
 
     onMount(() => {
         window.addEventListener('resize', on_resize)
-        props.portal_selector.addEventListener('click', close_on_click)
+        document.addEventListener('click', close_on_click)
     })
 
     function close_on_click(e: MouseEvent) {
-        if ($el_menu?.contains(e.target as Node)) {
+        if ($el_menu === undefined || $el_menu.contains(e.target as Node)) {
             return
         }
+        console.log($el_menu, e.target)
         set_is_show(false)
     }
 
-    createEffect(on(is_show, (is_show: boolean) => {
-        if (is_show) {
+    function on_toggle_show(e: MouseEvent) {
+        if (!props.portal_selector.classList.contains('active')) {
+          e.stopImmediatePropagation()
+        }
+        set_is_show(!is_show())
+    }
+
+    createEffect(() => {
+        if (is_show()) {
             props.portal_selector.classList.add('active')
         } else {
             props.portal_selector.classList.remove('active')
         }
-    }))
+    })
+
     return (<>
         <Portal mount={props.portal_selector}>
-            <div ref={$el_menu} class='dropdown-menu' classList={{ show: is_show() }}>
+            <Show when={is_show()}>
+            <div ref={$el_menu} class='dropdown-menu show'>
                 {props.children}
             </div>
+            </Show>
         </Portal>
-        <button ref={$el_btn} onClick={() => set_is_show(!is_show())} class='dropdown-menu-toggle-button' classList={{active: is_show()}}>
+        <button ref={$el_btn} onClick={on_toggle_show} class='dropdown-menu-toggle-button' classList={{active: is_show()}}>
             {props.button}
         </button>
     </>)

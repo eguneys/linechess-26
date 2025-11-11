@@ -6,6 +6,7 @@ import { DragHandler } from "../game/drag";
 import { Loop } from "../game/loop_input";
 import { box_intersect, type XY, type XYWH } from "../game/util";
 import { Vec2 } from "../game/vec2";
+import Icon, { Icons } from "./Icon";
 
 export default function SortableList<Item, U extends JSX.Element>(props: { 
     portal_selector: HTMLElement, 
@@ -236,7 +237,17 @@ export default function SortableList<Item, U extends JSX.Element>(props: {
         <div ref={_ => $wrap = _} class="sortable-list-wrap">
             <ul ref={_ => $list = _} class='sortable-list'>
                 <For each={dragging_list()}>{(item, i) =>
-                    <li onPointerDown={on_manual_click_drag_start} classList={{ dragging: dragging_i() === i() }} class='draggable'>{props.children(item.item, i)}</li>
+                    <li 
+                        classList={{ dragging: dragging_i() === i() }} 
+                        class='draggable'>
+                        <div class='handle' onPointerDown={on_manual_click_drag_start}>
+                            <Icon icon={Icons.DotEmpty}/>
+                            <span>{i() + 1}.</span>
+                        </div>
+                        <div class='content'>
+                            {props.children(item.item, i)}
+                        </div>
+                    </li>
                 }</For>
             </ul>
         </div>

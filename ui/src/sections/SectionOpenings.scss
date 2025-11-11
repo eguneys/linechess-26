@@ -10,22 +10,27 @@
         display: grid;
         overflow: hidden;
 
-        grid-template-areas: 'build'
+        @include media.mq-is-col1 {
+            grid-template-areas: 'build'
                 'explore'
                 'playlist';
 
-        grid-template-rows: repeat(3, 90vh);
+                grid-template-rows: repeat(3, minmax(90vw, 90vh));
+            }
 
         @include media.mq-at-least-col2 {
                 grid-template-areas: 'build explore'
                     'playlist .';
 
                 grid-template-columns: minmax(auto, 80vh) 1fr;
+
+                grid-template-rows: repeat(2, 90vh);
         }
 
         @include media.mq-at-least-col3 {
         grid-template-areas: 'playlist build explore';
         grid-template-columns: 2fr 60vh 3fr;
+                grid-template-rows: minmax(auto, 90vh);
         }
 
 
@@ -229,12 +234,42 @@
                 .title {
                     padding: 0.2em 0.5em;
                 }
+            }
+
+            .lines {
+                display: flex;
+                flex-flow: column;
+                min-height: 0;
+
+                .a-line {
+                    display: flex;
+                    align-items: center;
+
+                    .name {
+                        flex: 1;
+                    }
+
+                    .more {
+                        button, i {
+                        font-size: 1em;
+                        }
+                    }
+                }
+            }
+
+
+            &, .lines {
 
                 .more {
                     
+                    display: flex;
+                    align-items: center;
                     margin-right: 0.5em;
                     cursor: pointer;
+
+                    button, i {
                     font-size: 1.1em;
+                    }
 
                     button {
                         border: none;
@@ -242,21 +277,16 @@
                         color: theme.$light-grey;
                         
                             &:hover {
-                                color: theme.$pink;
+                                color: theme.$white;
                             }
 
                             &.active {
-                                color: theme.$white;
+                                color: theme.$pink;
                             }
                         }
                 }
 
-            }
 
-            .lines {
-                display: flex;
-                flex-flow: column;
-                min-height: 0;
             }
         }
 

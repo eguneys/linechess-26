@@ -6,10 +6,6 @@ button.dropdown-menu-toggle-button {
 .dropdown-menu-portal {
     touch-action: none;
     pointer-events: none;
-    &.active {
-        pointer-events: all;
-    }
-
 
 
     position: absolute;
@@ -32,6 +28,7 @@ button.dropdown-menu-toggle-button {
 
         &.show {
             visibility: visible;
+            pointer-events: all;
         }
     }
 

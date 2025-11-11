@@ -173,7 +173,7 @@ export const SectionOpenings = () => {
 
 
     const [playlist, _set_playlist] = createSignal("1.e4 Sicilian Defense,1.e4 e5 French Defense,1.d4 Queen's Gambit Declined,Scandinavian ".repeat(10).trim().split(','))
-    const [lines, set_lines] = createSignal("1.e4 1.d4 1.f4 1.g5 ".repeat(10).trim().split(' '))
+    const [lines, set_lines] = createSignal("e4 d4 f4 g5 ".repeat(10).trim().split(' '))
 
     return (<>
     <div class='openings'>
@@ -235,6 +235,7 @@ export const SectionOpenings = () => {
                 <div class='info'>
                     <div class='title'>1.e4 Sicilian Defense Scandinavian Defense More Alekhine Queen's G D</div>
                     <div class='more'>
+                        <Icon icon={Icons.HeartEmpty} />
                         <DropdownMenu
                             portal_selector={document.querySelector('.dropdown-menu-portal')!}
                             button={
@@ -265,7 +266,22 @@ export const SectionOpenings = () => {
 
 const OpeningPlayListItem = (item: string) => {
     return (<>
-    <div class='number'>{item}</div>
+    <div class='a-line'>
+        <span class='name'>{item}</span>
+        <div class='more'>
+            <Icon icon={Icons.HeartEmpty} />
+            <DropdownMenu
+                portal_selector={document.querySelector('.dropdown-menu-portal')!}
+                button={
+                    <Icon icon={Icons.Gear}/>
+                }>
+                <ul>
+                    <li>Edit <Icon icon={Icons.Gears}></Icon></li>
+                    <li class='red'>Delete <Icon icon={Icons.Delete}></Icon></li>
+                </ul>
+            </DropdownMenu>
+        </div>
+    </div>
     </>)
 }
 
