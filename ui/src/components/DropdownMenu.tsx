@@ -47,7 +47,6 @@ export default (props: { portal_selector: HTMLElement, children: JSX.Element, bu
         if ($el_menu === undefined || $el_menu.contains(e.target as Node)) {
             return
         }
-        console.log($el_menu, e.target)
         set_is_show(false)
     }
 

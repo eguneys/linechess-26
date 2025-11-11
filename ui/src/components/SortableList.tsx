@@ -1,4 +1,4 @@
-import { createMemo, createSignal, For, onCleanup, onMount, Show, type JSX } from "solid-js";
+import { children, createMemo, createSignal, For, onCleanup, onMount, Show, type JSX } from "solid-js";
 import { Portal } from "solid-js/web";
 import './SortableList.scss'
 import { createWritableMemo } from "@solid-primitives/memo";
@@ -228,6 +228,9 @@ export default function SortableList<Item, U extends JSX.Element>(props: {
         props.portal_selector.classList.add('active')
     }
 
+    // FIX this has no effect, children are still recreated on drag
+    const cc = (item: Item, index: () => number) => children(() => props.children(item, index))
+
     return (<>
         <Show when={dragging_item()}>{item => 
             <Portal mount={props.portal_selector}>
@@ -245,7 +248,7 @@ export default function SortableList<Item, U extends JSX.Element>(props: {
                             <span>{i() + 1}.</span>
                         </div>
                         <div class='content'>
-                            {props.children(item.item, i)}
+                            {cc(item.item, i)()}
                         </div>
                     </li>
                 }</For>

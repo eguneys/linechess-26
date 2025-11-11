@@ -16,6 +16,10 @@
             .handle {
                 display: flex;
                 align-items: center;
+
+                i {
+                    margin-bottom: 3px;
+                }
             }
 
             .content {

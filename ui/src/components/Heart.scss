@@ -1,0 +1,24 @@
+@use '../base_css/theme';
+
+.heart {
+    display: flex;
+    gap: 0.3em;
+    align-items: center;
+
+    &.is-heart {
+        color: theme.$red;
+    }
+
+    &.beat i {
+        animation: heart .2s;
+    }
+}
+
+@keyframes heart {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+}

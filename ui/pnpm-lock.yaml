@@ -23,6 +23,9 @@ importers:
       chessops:
         specifier: ^0.15.0
         version: 0.15.0
+      solid-blocks:
+        specifier: ^0.1.1
+        version: 0.1.1(solid-js@1.9.9)
       solid-js:
         specifier: ^1.9.9
         version: 1.9.9
@@ -862,6 +865,11 @@ packages:
     resolution: {integrity: sha512-RbcPH1n5cfwKrru7v7+zrZvjLurgHhGyso3HTyGtRivGWgYjbOmGuivCQaORNELjNONoK35nj28EoWul9sb1zQ==}
     engines: {node: '>=10'}
 
+  solid-blocks@0.1.1:
+    resolution: {integrity: sha512-B5SHezN+6jM7BA3Di9Pq58aUpXw5lWOL+lcpr24I5Iia3isGpmkg4XE7oFhUsoH3a3OKP1nJ1dxM8iOI9kQmqg==}
+    peerDependencies:
+      solid-js: ^1.6.1
+
   solid-js@1.9.9:
     resolution: {integrity: sha512-A0ZBPJQldAeGCTW0YRYJmt7RCeh5rbFfPZ2aOttgYnctHE7HgKeHCBB/PVc2P7eOfmNXqMFFFoYYdm3S4dcbkA==}
 
@@ -1677,6 +1685,10 @@ snapshots:
       seroval: 1.3.2
 
   seroval@1.3.2: {}
+
+  solid-blocks@0.1.1(solid-js@1.9.9):
+    dependencies:
+      solid-js: 1.9.9
 
   solid-js@1.9.9:
     dependencies:

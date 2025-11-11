@@ -10,6 +10,9 @@ import { INITIAL_FEN } from 'chessops/fen'
 import SortableList from '../components/SortableList'
 import DropdownMenu from '../components/DropdownMenu'
 import Icon, { Icons } from '../components/Icon'
+import Heart from '../components/Heart'
+import ActionButton, { Actions } from '../components/ActionButton'
+import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from '../components/ModalBlocks'
 
 
 type OpeningsBuildState = {
@@ -180,7 +183,7 @@ export const SectionOpenings = () => {
         <div class='build'>
             <h3>Build</h3>
             <div class='board-wrap'>
-                <div class='board' on:wheel={{ handleEvent: make_onWheel(set_on_wheel_board), passive: true }}>
+                <div class='board' on:wheel={{ handleEvent: make_onWheel(set_on_wheel_board), passive: false }}>
                     <PlayUciBoard fen={obs.fen} play_orig_key={play_orig_key} turn_color={obs.turn_color} movable_color={obs.turn_color} orientation={orientation()} last_move_uci={obs.last_move_uci} />
                 </div>
             </div>
@@ -235,7 +238,7 @@ export const SectionOpenings = () => {
                 <div class='info'>
                     <div class='title'>1.e4 Sicilian Defense Scandinavian Defense More Alekhine Queen's G D</div>
                     <div class='more'>
-                        <Icon icon={Icons.HeartEmpty} />
+                        <Heart nb_heart={900} is_heart={false} on_heart={() => { }} />
                         <DropdownMenu
                             portal_selector={document.querySelector('.dropdown-menu-portal')!}
                             button={
@@ -260,27 +263,44 @@ export const SectionOpenings = () => {
         </div>
         <div class="sortable-list-portal"></div>
         <div class="dropdown-menu-portal"></div>
+        <div class="modal-portal"></div>
     </div>
     </>)
 }
 
 const OpeningPlayListItem = (item: string) => {
+
+    const [is_edit_line_modal_open, set_is_edit_line_modal_open] = createSignal(false)
+
     return (<>
     <div class='a-line'>
         <span class='name'>{item}</span>
         <div class='more'>
-            <Icon icon={Icons.HeartEmpty} />
-            <DropdownMenu
+
+                <DropdownMenu
                 portal_selector={document.querySelector('.dropdown-menu-portal')!}
                 button={
                     <Icon icon={Icons.Gear}/>
                 }>
                 <ul>
-                    <li>Edit <Icon icon={Icons.Gears}></Icon></li>
+                    <li>
+                    <div onClick={() => set_is_edit_line_modal_open(true)}>
+                        Edit <Icon icon={Icons.Gears}></Icon>
+                    </div>
+                    </li>
                     <li class='red'>Delete <Icon icon={Icons.Delete}></Icon></li>
                 </ul>
             </DropdownMenu>
         </div>
+            <Modal
+                open={is_edit_line_modal_open()}
+                portal_selector={document.querySelector('.modal-portal')!}>
+                {({ toggle }) =>
+                    <>
+
+                        <EditLineModalContent toggle={toggle} />
+                    </>
+                }</Modal>
     </div>
     </>)
 }
@@ -288,5 +308,20 @@ const OpeningPlayListItem = (item: string) => {
 const OpeningPlayListItemDragging = (item: string) => {
     return (<>
         <div class='number2'>{item} woop woop!</div>
+    </>)
+}
+
+
+const EditLineModalContent = (props: { toggle: (open?: boolean) => void }) => {
+    return (<>
+        <ModalContent>
+            <ModalHeader><h3>Edit Line</h3></ModalHeader>
+            <ModalBody></ModalBody>
+            <ModalFooter>
+                <ActionButton action={Actions.Ok} onClick={() => props.toggle(false)}>
+                    Ok
+                </ActionButton>
+            </ModalFooter>
+        </ModalContent>
     </>)
 }

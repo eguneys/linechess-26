@@ -1,0 +1,34 @@
+@use 'sass:color';
+@use '../base_css/theme';
+
+button.action-button {
+
+    cursor: pointer;
+    border: none;
+    padding: 1em;
+    border-radius: 0 4px 0px 4px;
+
+    &.cancel {
+        background: theme.$dark-purple;
+
+        &:hover {
+           background: color.adjust(theme.$dark-purple, $lightness: 30%);
+        }
+    }
+
+    &.normal {
+        background: theme.$white;
+
+        &:hover {
+           background: color.adjust(theme.$white, $lightness: 30%);
+        }
+    }
+
+    &.ok {
+        background: theme.$dark-green;
+
+        &:hover {
+           background: color.adjust(theme.$dark-green, $lightness: 30%);
+        }
+    }
+}
