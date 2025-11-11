@@ -24,6 +24,7 @@ export const Modal = (props: ModalProps) => {
         "open",
         "children",
         "portal_selector",
+        "close_on_click_outside"
     ])
 
     const [open, set_open] = createSignal(local.open)
@@ -50,20 +51,19 @@ export const Modal = (props: ModalProps) => {
     let modal_ref!: HTMLDivElement
     createEffect(() => open() && modal_ref?.focus(), modal_ref?.scrollIntoView())
 
-
     const div_props = mergeProps(container_props, {
         role: 'dialog' as JSX.HTMLAttributes<HTMLDivElement>['role'],
         tabIndex: -1,
         class: props.class ? `sb-modal ${props.class}` : `sb-modal`,
         children: modal_content(),
-        onClick: createMemo(() =>  props.close_on_click_outside ? (ev: MouseEvent) => {
-
-            const target = ev.target as HTMLElement
-            if (!modal_content().some((content) => content?.contains(target))) {
-                //toggle(false)
-            }
-        } : undefined),
-
+        onClick: createMemo(() =>
+            local.close_on_click_outside ? (ev: MouseEvent) => {
+                const target = ev.target as HTMLElement
+                if (!modal_content().some((content) => content?.contains(target))) {
+                    toggle(false)
+                }
+            } : undefined
+        )(),
     })
 
     return (<>

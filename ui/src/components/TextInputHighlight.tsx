@@ -1,0 +1,15 @@
+import './TextInputHighlight.scss'
+
+export default (props: { placeholder: string, on_keyup: (_: string, is_submit: boolean) => void }) => {
+
+    const on_key_up = (e: KeyboardEvent) => {
+        props.on_keyup((e.target as HTMLInputElement).value, e.key === 'Enter')
+    }
+
+    return (
+        <label  class='custom-field'>
+            <input on:keyup={on_key_up} class="highlighted-text" type='text' placeholder="_"></input>
+            <span class='placeholder'>{props.placeholder}</span>
+        </label>
+    )
+}

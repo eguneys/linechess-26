@@ -1,0 +1,57 @@
+@use '../base_css/theme';
+
+.custom-field {
+    cursor: text;
+    position: relative;
+    margin-top: 1em;
+    margin-bottom: 5px;
+    display: inline-block;
+    --field-padding: 2px;
+
+    input.highlighted-text {
+
+    font-size: 1.1em;
+
+        $bg: theme.$dark-blue;
+
+        border: none;
+        background: linear-gradient(90deg, $bg, $bg) center bottom/0 0.15em no-repeat,
+        linear-gradient(90deg, #ccc, #ccc) left bottom/100% 0.15em no-repeat;
+        color: theme.$white;
+        transition: background-size 0.3s ease;
+
+        &:focus {
+            outline: none;
+            background-size: 100% 0.15em, 100% 0.1em, 100%;
+        }
+    }
+
+    .placeholder {
+        position: absolute;
+        left: var(--field-padding);
+        width: calc(100% - (var(--field-padding) * 2));
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        top: 0.5em;
+        line-height: 100%;
+        transform: translateY(-50%);
+        color: theme.$white;
+        transition:
+            top 0.3s ease,
+            color 0.3s ease,
+            font-size 0.3s ease;
+    }
+
+    ::placeholder {
+        color: transparent;
+    }
+
+}
+
+.custom-field input.dirty+.placeholder,
+.custom-field input:focus+.placeholder,
+.custom-field input:not(:placeholder-shown)+.placeholder {
+    top: -10px;
+    font-size: 0.8em;
+}

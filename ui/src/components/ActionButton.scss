@@ -6,13 +6,15 @@ button.action-button {
     cursor: pointer;
     border: none;
     padding: 1em;
-    border-radius: 0 4px 0px 4px;
+    border-radius: 40px;
+    min-width: 4em;
+    text-transform: uppercase;
 
     &.cancel {
-        background: theme.$dark-purple;
 
+        background: transparent;
         &:hover {
-           background: color.adjust(theme.$dark-purple, $lightness: 30%);
+           background: theme.$light-grey;
         }
     }
 
@@ -25,10 +27,10 @@ button.action-button {
     }
 
     &.ok {
-        background: theme.$dark-green;
+        background: theme.$white;
 
         &:hover {
-           background: color.adjust(theme.$dark-green, $lightness: 30%);
+           background: theme.$white;
         }
     }
 }

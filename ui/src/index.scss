@@ -58,16 +58,6 @@ a {
   }
 }
 
-input[type=text] {
-  padding: 0.72em;
-  min-width: 200px;
-
-  &:focus {
-    outline: none !important;
-    box-shadow: 0 0 2px theme.$dark-purple;
-  }
-}
-
 ul {
   list-style: none;
 }

@@ -3,7 +3,7 @@ import './SectionOpenings.scss'
 import { batch, createMemo, createSignal, For } from 'solid-js'
 import { MeetButton } from '../components/MeetButton'
 import ReplaySingle from '../components/ReplaySingle'
-import type { Color, FEN, Key } from 'chessground/types'
+import type { Color, FEN, Key } from '@lichess-org/chessground/types'
 import { fen_pos, fen_turn, steps_add_uci, steps_export_PGN, type SAN, type Step, type UCI } from '../components/steps'
 import { opposite, parseSquare } from 'chessops'
 import { INITIAL_FEN } from 'chessops/fen'
@@ -13,6 +13,7 @@ import Icon, { Icons } from '../components/Icon'
 import Heart from '../components/Heart'
 import ActionButton, { Actions } from '../components/ActionButton'
 import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from '../components/ModalBlocks'
+import TextInputHighlight from '../components/TextInputHighlight'
 
 
 type OpeningsBuildState = {
@@ -270,7 +271,7 @@ export const SectionOpenings = () => {
 
 const OpeningPlayListItem = (item: string) => {
 
-    const [is_edit_line_modal_open, set_is_edit_line_modal_open] = createSignal(false)
+    const [is_edit_line_modal_open, set_is_edit_line_modal_open] = createSignal(false, { equals: false })
 
     return (<>
     <div class='a-line'>
@@ -293,6 +294,7 @@ const OpeningPlayListItem = (item: string) => {
             </DropdownMenu>
         </div>
             <Modal
+                close_on_click_outside={true}
                 open={is_edit_line_modal_open()}
                 portal_selector={document.querySelector('.modal-portal')!}>
                 {({ toggle }) =>
@@ -311,13 +313,30 @@ const OpeningPlayListItemDragging = (item: string) => {
     </>)
 }
 
-
 const EditLineModalContent = (props: { toggle: (open?: boolean) => void }) => {
+
+
+    const on_line_name_changed = (value: string, is_submit: boolean) => {
+        if (is_submit) {
+            console.log(value)
+            props.toggle(false)
+        }
+
+    }
+
     return (<>
         <ModalContent>
-            <ModalHeader><h3>Edit Line</h3></ModalHeader>
-            <ModalBody></ModalBody>
+            <ModalHeader>
+                <h3>Edit Line</h3> 
+
+            </ModalHeader>
+            <ModalBody>
+                <TextInputHighlight placeholder="Line Name" on_keyup={on_line_name_changed}/>
+            </ModalBody>
             <ModalFooter>
+                <ActionButton action={Actions.Cancel} onClick={() => props.toggle(false)}>
+                    Cancel
+                </ActionButton>
                 <ActionButton action={Actions.Ok} onClick={() => props.toggle(false)}>
                     Ok
                 </ActionButton>

@@ -47,7 +47,7 @@
         }
 
         .build, .explore, .playlist {
-            border-left: 1px solid theme.$lavender;
+            border-left: 1px solid theme.$light-peach;
         }
 
 
@@ -127,7 +127,7 @@
 
         .board-tools,
         .replay-wrap {
-            border-bottom: 1px solid theme.$lavender;
+            border-bottom: 1px solid theme.$light-peach;
         }
 
         .playlist {
@@ -229,7 +229,7 @@
                 justify-content: space-between;
                 font-weight: bold;
                 align-items: center;
-                border-top: 2px solid theme.$lavender;
+                border-top: 2px solid theme.$light-peach;
 
                 .title {
                     padding: 0.2em 0.5em;
@@ -329,8 +329,46 @@
                 .modal-portal {
                     .sb-modal-content {
                         background: theme.$dark-grey;
-                        padding: 0.5em;
                         border-radius: 8px;
+                    }
+
+                    .sb-modal-body {
+                        padding: 1em;
+                    }
+
+                    .sb-modal-footer {
+                        padding: 0.5em;
+                        display: flex;
+                        justify-content: flex-end;
+                        gap: 0.5em;
+                    }
+
+                    .sb-modal-header {
+                        display: flex;
+                        align-items: center;
+                        h3 {
+                                color: theme.$white;
+                            }
+                        padding: 0.2em;
+
+                        border-bottom: 1px solid theme.$light-peach;
+
+                        .close {
+                            justify-self: flex-end;
+                            padding: 0.3em;
+                            cursor: pointer;
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            width: 2em;
+                            height: 2em;
+
+                            &:hover {
+                                background: theme.$light-grey;
+                                color: theme.$dark-blue;
+                            }
+                        }
                     }
                 }
     }
