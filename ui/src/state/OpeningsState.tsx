@@ -1,11 +1,11 @@
-import { createContext, JSX, useContext } from "solid-js"
+import { createContext, type JSX, useContext } from "solid-js"
 import { create_openings_store, type OpeningsStore } from './create_openings_store'
 
 
 const OpeningsStoreContext = createContext<OpeningsStore>()
 
 export function useStore() {
-    return useContext(OpeningsStoreContext)
+    return useContext(OpeningsStoreContext)!
 }
 
 export function OpeningStoreProvider(props: { children: JSX.Element}) {

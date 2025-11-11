@@ -47,6 +47,7 @@ export type OpeningsActions = {
     delete_line(id: OpeningsLineId): Promise<Result<void>>
     edit_line(id: OpeningsLineId, name?: string, orientation?: Color, moves?: UCIMoves): Promise<Result<void>>
     add_line_to_playlist(id: OpeningsPlaylistId, line_id: OpeningsLineId): Promise<Result<void>>
+    swap_line(a: OpeningsLineId, b: OpeningsLineId): Promise<Result<void>>
     create_playlist(name: string, line?: OpeningsLineId): Promise<Result<OpeningsPlaylist>>
     delete_playlist(id: OpeningsPlaylistId): Promise<Result<void>>
     edit_playlist(id: OpeningsPlaylistId, name?: string): Promise<Result<void>>
@@ -158,25 +159,25 @@ export function create_openings_store(): OpeningsStore {
              return get_selected_playlist_model()?.unwrap()
         },
         get mine_playlists() {
-            return get_mine_playlists()
+            return get_mine_playlists()?.unwrap()
         },
         get liked_playlists() {
-            return get_liked_playlists()
+            return get_liked_playlists()?.unwrap()
         },
         get global_playlists() {
-            return get_global_playlists()
+            return get_global_playlists()?.unwrap()
         },
         get mine_recent_playlists() {
-            return get_mine_recent_playlists()
+            return get_mine_recent_playlists()?.unwrap()
         },
         get global_recent_playlists() {
-            return get_global_recent_playlists()
+            return get_global_recent_playlists()?.unwrap()
         },
         get searched_lines() {
-            return get_searched_lines()
+            return get_searched_lines()?.unwrap()
         },
         get searched_playlists() {
-            return get_searched_playlists()
+            return get_searched_playlists()?.unwrap()
         }
     })
     
@@ -223,6 +224,19 @@ export function create_openings_store(): OpeningsStore {
                     set_state('playlist', 'lines', l => l._id === _._id, _)
                 }
             })
+        },
+        swap_line: async function(a: OpeningsLineId, b: OpeningsLineId): Promise<Result<void>> {
+            let res = await $agent.swap_line(a, b)
+
+            if (state.playlist) {
+                let a_i = state.playlist.lines.findIndex(_ => _._id === a)
+                let b_i = state.playlist.lines.findIndex(_ => _._id === b)
+                let aa = state.playlist.lines[a_i]
+                let bb = state.playlist.lines[b_i]
+                set_state('playlist', 'lines', a_i, bb)
+                set_state('playlist', 'lines', b_i, aa)
+            }
+            return res.map(() => {})
         },
         add_line_to_playlist: async function (id: OpeningsPlaylistId, line_id: OpeningsLineId): Promise<Result<void>> {
             let res = await $agent.add_line_to_playlist(id, line_id)

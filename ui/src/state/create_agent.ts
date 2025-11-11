@@ -20,7 +20,7 @@ export type OpeningsAgent = {
     edit_line(id: string, arg1: { name: string | undefined; orientation: Color | undefined; moves: string | undefined }): Promise<Result<OpeningsLine>>
     delete_line(id: string): Promise<Result<void>>
     create_line(id: string, name: string, moves: string, orientation: string): Promise<Result<OpeningsLine>>
-
+    swap_line(a: string, b: string): Promise<Result<void>>;
 }
 
 export const API_ENDPOINT = import.meta.env.DEV ? 'http://localhost:3300' : `https://api.linechess.com:3300`
@@ -84,6 +84,9 @@ export function create_openings_agent(): OpeningsAgent {
         },
         create_line: function (id: string, name: string, moves: string, orientation: string): Promise<Result<OpeningsLine>> {
             return $post('/line/create', { id, name, moves, orientation }).then(wrap_result);
+        },
+        swap_line: function (a: string, b: string): Promise<Result<void>> {
+            return $post('/line/swap', { a, b }).then(wrap_result)
         },
         get_searched_lines: function () {
             return $('/search/line')

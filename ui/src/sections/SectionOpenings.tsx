@@ -1,6 +1,6 @@
 import { make_onWheel, PlayUciBoard } from '../components/PlayUciBoard'
 import './SectionOpenings.scss'
-import { batch, createEffect, createMemo, createSignal, For, onCleanup } from 'solid-js'
+import { batch, createEffect, createMemo, createSignal, For, onCleanup, Show } from 'solid-js'
 import { MeetButton } from '../components/MeetButton'
 import ReplaySingle from '../components/ReplaySingle'
 import type { Color, FEN, Key } from '@lichess-org/chessground/types'
@@ -14,6 +14,8 @@ import Heart from '../components/Heart'
 import ActionButton, { Actions } from '../components/ActionButton'
 import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from '../components/ModalBlocks'
 import TextInputHighlight from '../components/TextInputHighlight'
+import { useStore } from '../state/OpeningsState'
+import type { OpeningsLine } from '../state/types'
 
 
 type OpeningsBuildState = {
@@ -175,10 +177,6 @@ export const SectionOpenings = () => {
         set_copied(false)
     }
 
-
-    const [playlist, _set_playlist] = createSignal("1.e4 Sicilian Defense,1.e4 e5 French Defense,1.d4 Queen's Gambit Declined,Scandinavian ".repeat(10).trim().split(','))
-    const [lines, set_lines] = createSignal("e4 d4 f4 g5 ".repeat(10).trim().split(' '))
-
     return (<>
     <div class='openings'>
         <div class='build'>
@@ -222,58 +220,77 @@ export const SectionOpenings = () => {
                 </div>
             </div>
         </div>
+            <OpeningsPlaylistView />
+        </div>
+    </>)
+}
+
+
+const OpeningsPlaylistView = () => {
+
+    let [state] = useStore()
+
+    const playlist = createMemo(() =>
+        state.global_playlists?.list
+    )
+
+    const lines = createMemo(() => state.playlist?.lines)
+
+    return (<>
         <div class='playlist'>
 
             <h3>Playlist</h3>
             <div class='filters'>
-                    <div class="tab active">Mine</div>
-                    <div class="tab">Liked</div>
-                    <div class="tab">Global</div>
-                </div>
-                <div class='lists'>
-                    <ul>
-            <Modal
-                close_on_click_outside={true}
-                portal_selector={document.querySelector('.modal-portal')!}>
-                {({ toggle }) =>
-                    <>
+                <div class="tab active">Mine</div>
+                <div class="tab">Liked</div>
+                <div class="tab">Global</div>
+            </div>
+            <div class='lists'>
+                <ul>
+                    <Modal
+                        close_on_click_outside={true}
+                        portal_selector={document.querySelector('.modal-portal')!}>
+                        {({ toggle }) =>
+                            <>
 
-                        <li onClick={() => toggle(true)} class='item-new'>
-                            <div class='icon'>+</div>
-                            <div class='title'>Create New Playlist</div>
+                                <li onClick={() => toggle(true)} class='item-new'>
+                                    <div class='icon'>+</div>
+                                    <div class='title'>Create New Playlist</div>
+                                </li>
+                                <CreateNewPlaylistModalContent toggle={toggle} />
+                            </>
+                        }</Modal>
+                    <For each={playlist()}>{item =>
+                        <li class='item'>
+                            <div class='title'>{item.name}</div>
+                            <div class='nb'>50 lines</div>
                         </li>
-                        <CreateNewPlaylistModalContent toggle={toggle} />
-                    </>
-                }</Modal>
-                        <For each={playlist()}>{item =>
-                            <li class='item'>
-                                <div class='title'>{item}</div>
-                                <div class='nb'>50 lines</div>
-                            </li>
-                        }</For>
-                    </ul>
-                </div>
-                <div class='info'>
-                    <PlaylistInfo/>
+                    }</For>
+                </ul>
+            </div>
+            <div class='info'>
+                <PlaylistInfo />
 
-                </div>
-                <div class='lines'>
+            </div>
+            <div class='lines'>
+                <Show when={lines()} fallback={
+                    <span class='no-lines'>No Lines here. Let's add some lines.</span>
+                }>{lines =>
                     <SortableList
+                            swap_item={() => { }}
                         children={OpeningPlayListItem}
                         dragging={OpeningPlayListItemDragging}
                         portal_selector={document.querySelector('.sortable-list-portal')!}
-                        list={lines()}
-                        set_list={set_lines} />
-                </div>
-
+                        list={lines()} />
+                }</Show>
+            </div>
         </div>
         <div class="sortable-list-portal"></div>
         <div class="dropdown-menu-portal"></div>
         <div class="modal-portal"></div>
-    </div>
     </>)
-}
 
+}
 
 const PlaylistInfo = () => {
 
@@ -313,13 +330,13 @@ const PlaylistInfo = () => {
 }
 
 
-const OpeningPlayListItem = (item: string) => {
+const OpeningPlayListItem = (item: OpeningsLine) => {
 
     const [is_edit_line_modal_open, set_is_edit_line_modal_open] = createSignal(false, { equals: false })
 
     return (<>
     <div class='a-line'>
-        <span class='name'>{item}</span>
+        <span class='name'>{item.name}</span>
         <div class='more'>
 
                 <DropdownMenu
@@ -351,9 +368,9 @@ const OpeningPlayListItem = (item: string) => {
     </>)
 }
 
-const OpeningPlayListItemDragging = (item: string) => {
+const OpeningPlayListItemDragging = (item: OpeningsLine) => {
     return (<>
-        <div class='number2'>{item} woop woop!</div>
+        <div class='number2'>{item.name} woop woop!</div>
     </>)
 }
 
