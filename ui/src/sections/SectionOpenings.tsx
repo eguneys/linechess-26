@@ -256,7 +256,7 @@ const OpeningsPlaylistView = () => {
 
     const filters = {
         mine: OpeningPlaylistsMineView,
-        liked: OpeningPlaylistsMineView,
+        liked: OpeningPlaylistsLikedView,
         global: OpeningPlaylistsMineView
     }
 
@@ -292,6 +292,21 @@ const OpeningsPlaylistView = () => {
 
 }
 
+const OpeningPlaylistsLikedView = () => {
+
+    let [state] = useStore()
+
+    const playlists = createMemo(() => state.liked_playlists)
+
+    return (<>
+        <ul>
+            <For each={playlists()}>{item =>
+                <PlaylistListItem item={item} />
+            }</For>
+        </ul>
+    </>)
+}
+
 const OpeningPlaylistsMineView = () => {
 
     let [state] = useStore()
@@ -321,10 +336,12 @@ const OpeningPlaylistsMineView = () => {
 }
 
 const PlaylistListItem = (props: { item: OpeningsPlaylist }) => {
+    const [,{ select_playlist}] = useStore()
+
     const item = createMemo(() => props.item)
 
     return (<>
-        <li class='item'>
+        <li onClick={() => select_playlist(props.item._id)} class='item'>
             <div class='title'>{item().name}</div>
             <div class='likes'>{item().nb_likes} <Icon icon={Icons.HeartFilled}></Icon></div>
             <div class='nb'>{item().nb_lines} lines</div>
@@ -353,12 +370,13 @@ const OpeningLines = (props: {lines: OpeningsLine[]}) => {
 
 const PlaylistInfo = (props: { playlist: OpeningsPlaylist }) => {
 
+    const [, { like_playlist }] = useStore()
     const [is_edit_playlist_item_modal_open, set_is_edit_playlist_item_modal_open] = createSignal(false, { equals: false })
 
     return (<>
         <div class='title'>{props.playlist.name}</div>
         <div class='more'>
-            <Heart nb_heart={props.playlist.nb_likes} is_heart={false} on_heart={() => { }} />
+            <Heart nb_heart={props.playlist.nb_likes} is_heart={props.playlist.have_liked} on_heart={yes => like_playlist(props.playlist._id, yes)} />
             <DropdownMenu
                 portal_selector={document.querySelector('.dropdown-menu-portal')!}
                 button={

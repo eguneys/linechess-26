@@ -17,7 +17,6 @@ export type OpeningsLine = {
     moves: UCIMoves
     orientation: Color
     slot: number
-    nb_likes: number
     nb_wdl: [number, number, number]
 }
 
@@ -29,4 +28,5 @@ export type OpeningsPlaylist = {
     name: string
     nb_likes: number
     nb_lines: number
+    have_liked: boolean
 }

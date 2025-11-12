@@ -12,6 +12,7 @@ const gen_id = () => Math.random().toString(16).slice(2, 10)
 const uuidv4_user = () => `ou${gen_id()}`
 const uuidv4_playlist = () => `opi${gen_id()}`
 const uuidv4_line = () => `oli${gen_id()}`
+const uuidv4_like = () => `lik${gen_id()}`
 
 const app = express();
 app.use(cors({ credentials: true, origin: true }));
@@ -100,8 +101,6 @@ async function initDb() {
             id TEXT PRIMARY KEY,
             user_id TEXT,
             name TEXT,
-            nb_lines INTEGER DEFAULT 0,
-            nb_likes INTEGER DEFAULT 0,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY(user_id) REFERENCES users(id)
         );
@@ -125,6 +124,7 @@ async function initDb() {
             id TEXT PRIMARY KEY,
             line_id TEXT,
             user_id TEXT,
+            yes NUMBER DEFAULT 1,
             FOREIGN KEY(line_id) REFERENCES lines(id),
             FOREIGN KEY(user_id) REFERENCES users(id)
         );
@@ -135,6 +135,7 @@ async function initDb() {
             id TEXT PRIMARY KEY,
             playlist_id TEXT,
             user_id TEXT,
+            yes NUMBER DEFAULT 1,
             FOREIGN KEY(playlist_id) REFERENCES playlists(id),
             FOREIGN KEY(user_id) REFERENCES users(id)
         );
@@ -153,7 +154,11 @@ const WorkingPlaylistName = `Working Playlist`
 async function db_insert_playlist(db, userId, name, line) {
     const id = uuidv4_playlist();
     await db.prepare(`INSERT INTO playlists (id, user_id, name) VALUES (?, ?, ?)`).run([id, userId, name]);
-    const playlist = await db.prepare(`SELECT * FROM playlists WHERE id=?`).get([id]);
+    const playlist = await db.prepare(`SELECT 
+        p.*,
+        (SELECT yes FROM playlist_likes where playlist_id = p.id AND user_id = ?) as have_liked
+        FROM playlists p
+        WHERE id=?`).get([userId, id]);
     return playlist
 }
 
@@ -169,6 +174,7 @@ function playlist_view_json(playlist) {
         nb_lines: playlist.nb_lines,
         nb_likes: playlist.nb_likes,
         created_at: playlist.created_at,
+        have_liked: playlist.have_liked === 1
     }
 }
 
@@ -211,15 +217,21 @@ app.post("/playlist/next-page", async (req, res) => {
     res.json(ok([]));
 });
 
-app.post("/line/like", async (req, res) => {
-    const { id, yes } = req.body;
-    await db.run(`UPDATE lines SET liked=? WHERE id=?`, [yes ? 1 : 0, id]);
-    res.json(ok(null));
-});
-
 app.post("/playlist/like", async (req, res) => {
-    const { id, yes } = req.body;
-    await db.run(`UPDATE playlists SET liked=? WHERE id=?`, [yes ? 1 : 0, id]);
+    const userId = req.session.userId
+    const { id: playlist_id , yes } = req.body;
+
+
+    let res2 = await db.prepare(`SELECT id from playlist_likes WHERE user_id = ? AND playlist_id = ?`).get([userId, playlist_id])
+
+    if (res2 === undefined) {
+        let id = uuidv4_like()
+        await db.prepare(`INSERT INTO playlist_likes (id, playlist_id, user_id) VALUES (?, ?, ?)`).run([id, playlist_id, userId]);
+    } else {
+        await db.prepare(`UPDATE playlist_likes SET yes=? WHERE id=?`).run([yes ? 1 : 0, res2.id]);
+    }
+
+
     res.json(ok(null));
 });
 
@@ -283,7 +295,7 @@ app.post("/line/create", async (req, res) => {
     ).run([line_id, playlist_id, name, moves, orientation, slot]);
 
     const line = await db.prepare(`SELECT l.*,
-        (SELECT COUNT(*) FROM line_likes WHERE line_id = l.id) as nb_likes
+        (SELECT COUNT(*) FROM line_likes WHERE line_id = l.id AND yes = 1) as nb_likes
         FROM lines l
         WHERE id=?`).get([line_id]);
     res.json(ok(line_view_json(line)));
@@ -336,30 +348,43 @@ app.get("/playlist/mine", async (req, res) => {
     let userId = req.session.userId
     const playlists = await db.prepare(`SELECT p.*,
         (SELECT COUNT(*) FROM lines WHERE playlist_id = p.id) as nb_lines,
-        (SELECT COUNT(*) FROM playlist_likes WHERE playlist_id = p.id) as nb_likes 
+        (SELECT COUNT(*) FROM playlist_likes WHERE playlist_id = p.id AND yes = 1) as nb_likes,
+        (SELECT yes FROM playlist_likes where playlist_id = p.id AND user_id = ?) as have_liked
         FROM playlists p
-        WHERE user_id=? ORDER BY created_at DESC`).all(userId);
+        WHERE user_id=? ORDER BY created_at DESC`).all(userId, userId);
     res.json(playlists.map(playlist_view_json));
 });
 
-/*
 app.get("/playlist/liked", async (req, res) => {
-    const playlists = await db.prepare(`SELECT * FROM playlists WHERE liked=1`).all();
-    res.json(ok(playlists));
+
+    const userId = req.session.userId
+
+    const playlists = await db.prepare(`
+        SELECT playlists.* 
+        FROM playlist_likes
+        INNER JOIN playlists
+        ON playlists.id = playlist_likes.playlist_id
+        AND playlist_likes.user_id = ? 
+        AND playlist_likes.yes = 1
+        `).all(userId);
+
+        console.log(playlists)
+
+    res.json(playlists.map(playlist_view_json));
 });
-*/
 
 app.get("/playlist/selected", async (req, res) => {
     let userId = req.session.userId
     const playlist = await db.prepare(`SELECT p.*,
         (SELECT COUNT(*) FROM lines WHERE playlist_id = p.id) as nb_lines,
-        (SELECT COUNT(*) FROM playlist_likes WHERE playlist_id = p.id) as nb_likes 
+        (SELECT COUNT(*) FROM playlist_likes WHERE playlist_id = p.id AND yes = 1) as nb_likes,
+        (SELECT yes FROM playlist_likes where playlist_id = p.id AND user_id = ?) as have_liked
         FROM playlists p 
         WHERE name=? AND user_id=?`
-    ).get(WorkingPlaylistName, userId);
+    ).get(userId, WorkingPlaylistName, userId);
     const lines = await db.prepare(`
         SELECT l.*,
-        (SELECT COUNT(*) FROM line_likes WHERE line_id = l.id) as nb_likes
+        (SELECT COUNT(*) FROM line_likes WHERE line_id = l.id AND yes = 1) as nb_likes
         FROM lines l
         WHERE playlist_id=?`).all([playlist.id]);
  
@@ -369,15 +394,17 @@ app.get("/playlist/selected", async (req, res) => {
 
 
 app.get("/playlist/selected/:id", async (req, res) => {
+    const userId = req.session.userId
     let playlist_id = req.params.id
     const playlist = await db.prepare(`SELECT p.*,
         (SELECT COUNT(*) FROM lines WHERE playlist_id = p.id) as nb_lines,
-        (SELECT COUNT(*) FROM playlist_likes WHERE playlist_id = p.id) as nb_likes 
+        (SELECT COUNT(*) FROM playlist_likes WHERE playlist_id = p.id AND yes = 1) as nb_likes,
+        (SELECT yes FROM playlist_likes where playlist_id = p.id AND user_id = ?) as have_liked
         FROM playlists p
-        WHERE id=?`).get(playlist_id);
+        WHERE id=?`).get(userId, playlist_id);
     const lines = await db.prepare(`SELECT 
         l.*,
-        (SELECT COUNT(*) FROM line_likes WHERE line_id = l.id) as nb_likes 
+        (SELECT COUNT(*) FROM line_likes WHERE line_id = l.id AND yes = 1) as nb_likes 
         FROM lines l
         WHERE playlist_id=?`).all([playlist_id]);
     res.json({ playlist: playlist_view_json(playlist), lines: lines.map(line_view_json) });

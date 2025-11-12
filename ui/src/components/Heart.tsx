@@ -1,11 +1,12 @@
 import { createSignal, Show } from "solid-js"
 import Icon, { Icons } from "./Icon"
 import './Heart.scss'
+import { createWritableMemo } from "@solid-primitives/memo"
 
 export default (props: { nb_heart: number, is_heart: boolean, on_heart: (is_heart: boolean) => void }) => {
 
     const [is_beat, set_is_beat] = createSignal(false)
-    const [is_heart, set_is_heart] = createSignal(props.is_heart)
+    const [is_heart, set_is_heart] = createWritableMemo(() => props.is_heart)
 
 
     const toggle_heart = () => {

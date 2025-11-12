@@ -42,6 +42,7 @@ export type SetPageNavigate = -1 | 0 | 1
 export type SearchTerm = string
 
 export type OpeningsActions = {
+    select_playlist(id: OpeningsPlaylistId): void
     create_line(name: string, moves: UCIMoves, orientation: Color): Promise<Result<OpeningsLine>>
     delete_line(id: OpeningsLineId): Promise<Result<void>>
     edit_line(id: OpeningsLineId, name?: string, orientation?: Color, moves?: UCIMoves): Promise<Result<void>>
@@ -51,7 +52,6 @@ export type OpeningsActions = {
     delete_playlist(id: OpeningsPlaylistId): Promise<Result<void>>
     edit_playlist(id: OpeningsPlaylistId, name?: string): Promise<Result<void>>
     like_playlist(id: OpeningsPlaylistId, yes: boolean): Promise<Result<void>>
-    like_line(id: OpeningsLineId, yes: boolean): Promise<Result<void>>
     next_playlist_page(i: SetPageNavigate): void
     next_searched_lines_page(i: SetPageNavigate): void
     next_searched_playlist_page(i: SetPageNavigate): void
@@ -172,6 +172,9 @@ export function create_openings_store(): OpeningsStore {
     })
 
     let actions: OpeningsActions = {
+        select_playlist(id: OpeningsPlaylistId) {
+            set_selected_playlist_id(id)
+        },
         create_line: async function (name: string, moves: UCIMoves, orientation: Color): Promise<Result<OpeningsLine>> {
             let playlist_id = selected_playlist_id()
             let res = await $agent.create_line(playlist_id, name, moves, orientation)
@@ -285,17 +288,6 @@ export function create_openings_store(): OpeningsStore {
 
             if (state.playlist && state.playlist.playlist._id === id) {
                 set_state('playlist', 'playlist', 'nb_likes', _ => yes ? _ + 1 : _ - 1)
-            }
-
-            return res.map(() => {})
-        },
-        like_line: async function (id: OpeningsLineId, yes: boolean): Promise<Result<void>> {
-            let res = await $agent.like_line(id, yes)
-
-            set_fetch_liked_playlists(true)
-
-            if (state.playlist) {
-                set_state('playlist', 'lines', _ => _._id === id, 'nb_likes', _ => yes ? _ + 1 : _ - 1)
             }
 
             return res.map(() => {})

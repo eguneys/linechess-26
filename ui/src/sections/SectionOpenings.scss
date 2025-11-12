@@ -29,7 +29,7 @@
 
         @include media.mq-at-least-col3 {
             grid-template-areas: 'playlist build explore';
-            grid-template-columns: calc((90vw - 60vh) * 2/5) 60vh calc((90vw - 60vh) * 3/5);
+            grid-template-columns: 2fr clamp(300px, 30cqw, 600px) 3fr;
             grid-template-rows: minmax(auto, 90vh);
         }
 
@@ -166,11 +166,12 @@
 
                 ul {
                         display: grid;
-                        grid-template-columns: repeat(2, minmax(0, 1fr));
-                        grid-template-rows: 100px;
+                        grid-template-columns: 1fr 1fr;
+                        min-height: 0;
+                        min-width: 0;
+
 
                         .item-new {
-                            flex: 0 0 50%;
                             padding: 1em;
                             cursor: pointer;
 
@@ -202,13 +203,25 @@
                 
                         .item {
 
-                            flex: 0 0 50%;
+                            display: flex;
+                            flex-flow: column;
                             padding: 1em;
+                            cursor: pointer;
+                                width: 100%;
+                                overflow: hidden;
+                                min-width: 0;
+                            
+                            &:hover {
+                                background: theme.$dark-purple;
+                            }
 
                             .title {
                                 font-weight: 500;
                                 color: theme.$white;
                                 cursor: pointer;
+                                white-space: nowrap;
+                                text-overflow: ellipsis;
+                                overflow: hidden;
 
                                 &:hover {
                                     text-decoration: underline;

@@ -32,6 +32,7 @@ p {
 #root {
 .main-wrap {
         --main-margin: 18px;
+        --main-max-width: 1500px;
 
         @include media.mq-is-col1 {
             --main-margin: 0px;
