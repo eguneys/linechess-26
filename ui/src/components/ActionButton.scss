@@ -33,4 +33,9 @@ button.action-button {
            background: theme.$light-grey;
         }
     }
+
+    &.waiting {
+        background: color.scale(theme.$dark-grey, $lightness: 30%);
+        color: theme.$dark-grey;
+    }
 }

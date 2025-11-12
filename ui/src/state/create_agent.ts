@@ -34,12 +34,21 @@ async function $post(path: string, body: any = {}) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
-    }).catch(err => console.error(err));
+    }).catch(err => new FetchError(err))
     return res
 }
 
+class FetchError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'FetchError';
+    }
+}
+
 const wrap_result = (_: any) => {
-    if (typeof _ === 'object' && _.errors !== undefined) {
+    if (_ instanceof Error) {
+        return Result.err(_)
+    } else if (typeof _ === 'object' && _.errors !== undefined) {
         return Result.err(_.errors)
     } else {
         return Result.ok(_)

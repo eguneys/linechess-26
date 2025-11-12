@@ -28,9 +28,9 @@
         }
 
         @include media.mq-at-least-col3 {
-        grid-template-areas: 'playlist build explore';
-        grid-template-columns: 2fr 60vh 3fr;
-                grid-template-rows: minmax(auto, 90vh);
+            grid-template-areas: 'playlist build explore';
+            grid-template-columns: calc((90vw - 60vh) * 2/5) 60vh calc((90vw - 60vh) * 3/5);
+            grid-template-rows: minmax(auto, 90vh);
         }
 
 
@@ -370,6 +370,9 @@
 
                     .sb-modal-body {
                         padding: 0.5em;
+                        display: flex;
+                        flex-flow: column;
+                        gap: 1em;
                     }
 
                     .sb-modal-footer {
@@ -412,6 +415,11 @@
                     .sb-modal-body {
                         h3 {
                                 color: theme.$white;
+                            }
+
+                            .error {
+                                color: theme.$red;
+                                align-self: flex-end;
                             }
                     }
                 }

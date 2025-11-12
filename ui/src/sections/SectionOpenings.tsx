@@ -1,6 +1,6 @@
 import { make_onWheel, PlayUciBoard } from '../components/PlayUciBoard'
 import './SectionOpenings.scss'
-import { batch, createEffect, createMemo, createSignal, For, onCleanup, Show } from 'solid-js'
+import { batch, createEffect, createMemo, createSelector, createSignal, For, on, onCleanup, Show } from 'solid-js'
 import { MeetButton } from '../components/MeetButton'
 import ReplaySingle from '../components/ReplaySingle'
 import type { Color, FEN, Key } from '@lichess-org/chessground/types'
@@ -225,51 +225,29 @@ export const SectionOpenings = () => {
     </>)
 }
 
+type PlaylistFilter = 'mine' | 'liked' | 'global'
 
 const OpeningsPlaylistView = () => {
 
     let [state] = useStore()
-
-    const playlist = createMemo(() =>
-        state.global_playlists?.list
-    )
-
     const selected_playlist = createMemo(() => state.playlist?.playlist)
 
-    const lines = createMemo(() => state.playlist?.lines)
+
+    const [filter, set_filter] = createSignal<PlaylistFilter>('mine')
+
+    const is_active = createSelector(filter)
 
     return (<>
         <div class='playlist'>
 
             <h3>Playlist</h3>
             <div class='filters'>
-                <div class="tab active">Mine</div>
-                <div class="tab">Liked</div>
-                <div class="tab">Global</div>
+                <div onClick={_ => set_filter('mine')} class="tab" classList={{active: is_active('mine')}}>Mine</div>
+                <div onClick={_ => set_filter('liked')} class="tab" classList={{active: is_active('liked')}}>Liked</div>
+                <div onClick={_ => set_filter('global')} class="tab" classList={{active: is_active('global')}}>Global</div>
             </div>
             <div class='lists'>
-                <ul>
-                    <Modal
-                        close_on_click_outside={true}
-                        portal_selector={document.querySelector('.modal-portal')!}>
-                        {({ toggle }) =>
-                            <>
-
-                                <li onClick={() => toggle(true)} class='item-new'>
-                                    <div class='icon'>+</div>
-                                    <div class='title'>Create New Playlist</div>
-                                </li>
-                                <CreateNewPlaylistModalContent toggle={toggle} />
-                            </>
-                        }</Modal>
-                    <For each={playlist()}>{item =>
-                        <li class='item'>
-                            <div class='title'>{item.name}</div>
-                            <div class='likes'>{item.nb_likes} <Icon icon={Icons.HeartFilled}></Icon></div>
-                            <div class='nb'>{item.nb_lines} lines</div>
-                        </li>
-                    }</For>
-                </ul>
+                <OpeningPlaylistsView show_create_playlist={filter() === 'mine'}/>
             </div>
             <div class='info'>
                 <Show when={selected_playlist()} fallback={
@@ -279,16 +257,7 @@ const OpeningsPlaylistView = () => {
                 }</Show>
             </div>
             <div class='lines'>
-                <Show when={lines()} fallback={
-                    <span class='no-lines'>No Lines here. Let's add some lines.</span>
-                }>{lines =>
-                    <SortableList
-                            swap_item={() => { }}
-                        children={OpeningPlayListItem}
-                        dragging={OpeningPlayListItemDragging}
-                        portal_selector={document.querySelector('.sortable-list-portal')!}
-                        list={lines()} />
-                }</Show>
+                <OpeningLines />
             </div>
         </div>
         <div class="sortable-list-portal"></div>
@@ -296,6 +265,61 @@ const OpeningsPlaylistView = () => {
         <div class="modal-portal"></div>
     </>)
 
+}
+
+const OpeningPlaylistsView = (props: { show_create_playlist: boolean }) => {
+
+    let [state] = useStore()
+
+    const playlist = createMemo(() =>
+        state.global_playlists?.list
+    )
+
+    return (<>
+        <ul>
+            <Show when={props.show_create_playlist}>
+                <Modal
+                    close_on_click_outside={true}
+                    portal_selector={document.querySelector('.modal-portal')!}>
+                    {({ open, toggle }) =>
+                        <>
+
+                            <li onClick={() => toggle(true)} class='item-new'>
+                                <div class='icon'>+</div>
+                                <div class='title'>Create New Playlist</div>
+                            </li>
+                            <CreateNewPlaylistModalContent open={open} toggle={toggle} />
+                        </>
+                    }</Modal>
+            </Show>
+            <For each={playlist()}>{item =>
+                <li class='item'>
+                    <div class='title'>{item.name}</div>
+                    <div class='likes'>{item.nb_likes} <Icon icon={Icons.HeartFilled}></Icon></div>
+                    <div class='nb'>{item.nb_lines} lines</div>
+                </li>
+            }</For>
+        </ul>
+    </>)
+}
+
+const OpeningLines = () => {
+
+    let [state] = useStore()
+    const lines = createMemo(() => state.playlist?.lines)
+
+    return (<>
+        <Show when={lines()} fallback={
+            <span class='no-lines'>No Lines here. Let's add some lines.</span>
+        }>{lines =>
+            <SortableList
+                swap_item={() => { }}
+                children={OpeningPlayListItem}
+                dragging={OpeningPlayListItemDragging}
+                portal_selector={document.querySelector('.sortable-list-portal')!}
+                list={lines()} />
+            }</Show>
+    </>)
 }
 
 const PlaylistInfo = (props: { playlist: OpeningsPlaylist }) => {
@@ -447,16 +471,44 @@ const EditPlaylistItemModalContent = (props: { toggle: (open?: boolean) => void 
 }
 
 
-const CreateNewPlaylistModalContent = (props: { toggle: (open?: boolean) => void }) => {
+const CreateNewPlaylistModalContent = (props: { open: () => boolean, toggle: (open?: boolean) => void }) => {
 
+    let [error, set_error] = createSignal<string | undefined>(undefined)
+    let [waiting, set_waiting] = createSignal(false)
+    let [, { create_playlist }] = useStore()
 
-    const on_playlist_name_changed = (value: string, is_submit: boolean) => {
+    let submit_value: string
+
+    const on_playlist_name_changed = async (value: string, is_submit: boolean) => {
+        submit_value = value
         if (is_submit) {
-            console.log(value)
+            submit()
+        }
+    }
+
+    const submit = async () => {
+        set_waiting(true)
+        set_error(undefined)
+
+        let res = await create_playlist(submit_value)
+
+        if (res.isOk) {
             props.toggle(false)
+        } else if (res.isErr) {
+
+            console.error(res.error)
+            set_error(res.error.message ?? 'Something went wrong.')
         }
 
+        set_waiting(false)
     }
+
+    createEffect(on(props.open, is_open => {
+        if (!is_open) {
+            set_error(undefined)
+            set_waiting(false)
+        }
+    }))
 
     return (<>
         <ModalContent>
@@ -466,12 +518,15 @@ const CreateNewPlaylistModalContent = (props: { toggle: (open?: boolean) => void
             </ModalHeader>
             <ModalBody>
                 <TextInputHighlight placeholder="Playlist Name" on_keyup={on_playlist_name_changed}/>
+                <Show when={error()}>
+                    <span class='error'>{error()}</span>
+                </Show>
             </ModalBody>
             <ModalFooter>
                 <ActionButton action={Actions.Cancel} onClick={() => props.toggle(false)}>
                     Cancel
                 </ActionButton>
-                <ActionButton action={Actions.Ok} onClick={() => props.toggle(false)}>
+                <ActionButton waiting={waiting()} action={Actions.Ok} onClick={() => submit()}>
                     Create
                 </ActionButton>
             </ModalFooter>
@@ -500,7 +555,7 @@ const AddToPlaylistModalContent = (props: { toggle: (open?: boolean) => void, se
             <ActionButton action={Actions.Normal} onClick={() => local.toggle(true)}>
                 + New Playlist
             </ActionButton>
-            <CreateNewPlaylistModalContent toggle={local.toggle} />
+            <CreateNewPlaylistModalContent open={local.open} toggle={local.toggle} />
         </>)
     }
 
