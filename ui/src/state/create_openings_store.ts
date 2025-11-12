@@ -3,7 +3,7 @@ import type { Color, OpeningsLine, OpeningsLineId, OpeningsPlaylist, OpeningsPla
 import { createStore } from "solid-js/store"
 import { create_openings_agent } from './create_agent'
 import { createAsync } from "@solidjs/router"
-import { createSignal } from "solid-js"
+import { batch, createSignal } from "solid-js"
 
 export interface Paged<Content> {
     max_per_page: number
@@ -42,11 +42,11 @@ export type SetPageNavigate = -1 | 0 | 1
 export type SearchTerm = string
 
 export type OpeningsActions = {
-    create_line(id: OpeningsPlaylistId, name: string, moves: UCIMoves, orientation: Color): Promise<Result<OpeningsLine>>
+    create_line(name: string, moves: UCIMoves, orientation: Color): Promise<Result<OpeningsLine>>
     delete_line(id: OpeningsLineId): Promise<Result<void>>
     edit_line(id: OpeningsLineId, name?: string, orientation?: Color, moves?: UCIMoves): Promise<Result<void>>
     add_line_to_playlist(id: OpeningsPlaylistId, line_id: OpeningsLineId): Promise<Result<void>>
-    swap_line(a: OpeningsLineId, b: OpeningsLineId): Promise<Result<void>>
+    set_ordered_line_slots(list: OpeningsLine[]): Promise<Result<void>>
     create_playlist(name: string, line?: OpeningsLineId): Promise<Result<OpeningsPlaylist>>
     delete_playlist(id: OpeningsPlaylistId): Promise<Result<void>>
     edit_playlist(id: OpeningsPlaylistId, name?: string): Promise<Result<void>>
@@ -82,7 +82,7 @@ export function create_openings_store(): OpeningsStore {
         let id = selected_playlist_id()
 
         if (id === undefined) {
-            return Result.err(new Error('No Selected Playlist'))
+            return $agent.get_working_playlist_model()
         }
 
         return $agent.get_selected_playlist_model(id)
@@ -170,11 +170,11 @@ export function create_openings_store(): OpeningsStore {
             return get_searched_playlists()?.unwrap()
         }
     })
-    
 
     let actions: OpeningsActions = {
-        create_line: async function (id: OpeningsPlaylistId, name: string, moves: UCIMoves, orientation: Color): Promise<Result<OpeningsLine>> {
-            let res = await $agent.create_line(id, name, moves, orientation)
+        create_line: async function (name: string, moves: UCIMoves, orientation: Color): Promise<Result<OpeningsLine>> {
+            let playlist_id = selected_playlist_id()
+            let res = await $agent.create_line(playlist_id, name, moves, orientation)
 
             if (res.isErr) {
                 return res
@@ -215,16 +215,15 @@ export function create_openings_store(): OpeningsStore {
                 }
             })
         },
-        swap_line: async function(a: OpeningsLineId, b: OpeningsLineId): Promise<Result<void>> {
-            let res = await $agent.swap_line(a, b)
+        set_ordered_line_slots: async function(lines: OpeningsLine[]): Promise<Result<void>> {
+            let res = await $agent.set_ordered_line_slots(lines[0]._playlist_id, lines.map(_ => _._id))
 
             if (state.playlist) {
-                let a_i = state.playlist.lines.findIndex(_ => _._id === a)
-                let b_i = state.playlist.lines.findIndex(_ => _._id === b)
-                let aa = state.playlist.lines[a_i]
-                let bb = state.playlist.lines[b_i]
-                set_state('playlist', 'lines', a_i, bb)
-                set_state('playlist', 'lines', b_i, aa)
+                batch(() => {
+                    lines.forEach((line, i) => {
+                        set_state('playlist', 'lines', _ => _._id === line._id, 'slot', i)
+                    })
+                })
             }
             return res.map(() => {})
         },

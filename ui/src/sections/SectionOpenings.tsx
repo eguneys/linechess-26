@@ -1,6 +1,6 @@
 import { make_onWheel, PlayUciBoard } from '../components/PlayUciBoard'
 import './SectionOpenings.scss'
-import { batch, createEffect, createMemo, createSelector, createSignal, For, on, onCleanup, Show } from 'solid-js'
+import { batch, createEffect, createMemo, createSelector, createSignal, For, on, onCleanup, Show, } from 'solid-js'
 import { MeetButton } from '../components/MeetButton'
 import ReplaySingle from '../components/ReplaySingle'
 import type { Color, FEN, Key } from '@lichess-org/chessground/types'
@@ -16,6 +16,7 @@ import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from '../com
 import TextInputHighlight from '../components/TextInputHighlight'
 import { useStore } from '../state/OpeningsState'
 import type { OpeningsLine, OpeningsPlaylist } from '../state/types'
+import { Dynamic } from 'solid-js/web'
 
 
 type OpeningsBuildState = {
@@ -177,6 +178,22 @@ export const SectionOpenings = () => {
         set_copied(false)
     }
 
+
+    let line_name: string
+
+    const on_line_name_changed = (value: string, _is_submit: boolean) => {
+        line_name = value
+    }
+
+    const [,{create_line}] = useStore()
+    const on_save_line = () => {
+
+        let name = line_name
+        let moves = obs.export_PGN
+
+        create_line(name, moves, orientation())
+    }
+
     return (<>
     <div class='openings'>
         <div class='build'>
@@ -205,9 +222,9 @@ export const SectionOpenings = () => {
 
 
             <div class='tools'>
-                <TextInputHighlight size={30} on_keyup={() => {}} placeholder="Opening Line Name"></TextInputHighlight>
+                <TextInputHighlight size={30} on_keyup={on_line_name_changed} placeholder="Opening Line Name"></TextInputHighlight>
                 <div class='action'>
-                <MeetButton meet={true}>Save</MeetButton>
+                <MeetButton meet={true} onClick={on_save_line}>Save</MeetButton>
             <Modal
                 close_on_click_outside={true}
                 portal_selector={document.querySelector('.modal-portal')!}>
@@ -230,12 +247,18 @@ type PlaylistFilter = 'mine' | 'liked' | 'global'
 const OpeningsPlaylistView = () => {
 
     let [state] = useStore()
-    const selected_playlist = createMemo(() => state.playlist?.playlist)
+    const selected_playlist = createMemo(() => state.playlist)
 
 
     const [filter, set_filter] = createSignal<PlaylistFilter>('mine')
 
     const is_active = createSelector(filter)
+
+    const filters = {
+        mine: OpeningPlaylistsMineView,
+        liked: OpeningPlaylistsMineView,
+        global: OpeningPlaylistsMineView
+    }
 
     return (<>
         <div class='playlist'>
@@ -247,17 +270,19 @@ const OpeningsPlaylistView = () => {
                 <div onClick={_ => set_filter('global')} class="tab" classList={{active: is_active('global')}}>Global</div>
             </div>
             <div class='lists'>
-                <OpeningPlaylistsView show_create_playlist={filter() === 'mine'}/>
+                <Dynamic component={filters[filter()]}></Dynamic>
             </div>
             <div class='info'>
                 <Show when={selected_playlist()} fallback={
                     <span class='no-playlist'>Please Select a Playlist</span>
                 }>{ playlist=> 
-                    <PlaylistInfo playlist={playlist()} />
+                    <PlaylistInfo playlist={playlist().playlist} />
                 }</Show>
             </div>
             <div class='lines'>
-                <OpeningLines />
+                <Show when={selected_playlist()}>{ playlist =>
+                    <OpeningLines lines={playlist().lines}/>
+                }</Show>
             </div>
         </div>
         <div class="sortable-list-portal"></div>
@@ -267,53 +292,57 @@ const OpeningsPlaylistView = () => {
 
 }
 
-const OpeningPlaylistsView = (props: { show_create_playlist: boolean }) => {
+const OpeningPlaylistsMineView = () => {
 
     let [state] = useStore()
 
-    const playlist = createMemo(() =>
-        state.global_playlists?.list
-    )
+    const playlists = createMemo(() => state.mine_playlists)
 
     return (<>
         <ul>
-            <Show when={props.show_create_playlist}>
-                <Modal
-                    close_on_click_outside={true}
-                    portal_selector={document.querySelector('.modal-portal')!}>
-                    {({ open, toggle }) =>
-                        <>
+            <Modal
+                close_on_click_outside={true}
+                portal_selector={document.querySelector('.modal-portal')!}>
+                {({ open, toggle }) =>
+                    <>
 
-                            <li onClick={() => toggle(true)} class='item-new'>
-                                <div class='icon'>+</div>
-                                <div class='title'>Create New Playlist</div>
-                            </li>
-                            <CreateNewPlaylistModalContent open={open} toggle={toggle} />
-                        </>
-                    }</Modal>
-            </Show>
-            <For each={playlist()}>{item =>
-                <li class='item'>
-                    <div class='title'>{item.name}</div>
-                    <div class='likes'>{item.nb_likes} <Icon icon={Icons.HeartFilled}></Icon></div>
-                    <div class='nb'>{item.nb_lines} lines</div>
-                </li>
+                        <li onClick={() => toggle(true)} class='item-new'>
+                            <div class='icon'>+</div>
+                            <div class='title'>Create New Playlist</div>
+                        </li>
+                        <CreateNewPlaylistModalContent open={open} toggle={toggle} />
+                    </>
+            }</Modal>
+            <For each={playlists()}>{item =>
+                <PlaylistListItem item={item} />
             }</For>
         </ul>
     </>)
 }
 
-const OpeningLines = () => {
+const PlaylistListItem = (props: { item: OpeningsPlaylist }) => {
+    const item = createMemo(() => props.item)
 
-    let [state] = useStore()
-    const lines = createMemo(() => state.playlist?.lines)
+    return (<>
+        <li class='item'>
+            <div class='title'>{item().name}</div>
+            <div class='likes'>{item().nb_likes} <Icon icon={Icons.HeartFilled}></Icon></div>
+            <div class='nb'>{item().nb_lines} lines</div>
+        </li>
+    </>)
+}
+
+const OpeningLines = (props: {lines: OpeningsLine[]}) => {
+
+    let [,{ set_ordered_line_slots }] = useStore()
+    const lines = createMemo(() => props.lines.slice(0).sort((a, b) => a.slot - b.slot))
 
     return (<>
         <Show when={lines()} fallback={
             <span class='no-lines'>No Lines here. Let's add some lines.</span>
         }>{lines =>
             <SortableList
-                swap_item={() => { }}
+                set_ordered={set_ordered_line_slots}
                 children={OpeningPlayListItem}
                 dragging={OpeningPlayListItemDragging}
                 portal_selector={document.querySelector('.sortable-list-portal')!}

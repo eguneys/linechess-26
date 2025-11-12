@@ -16,6 +16,7 @@ export type OpeningsLine = {
     name: string
     moves: UCIMoves
     orientation: Color
+    slot: number
     nb_likes: number
     nb_wdl: [number, number, number]
 }

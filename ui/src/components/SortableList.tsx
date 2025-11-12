@@ -1,4 +1,4 @@
-import { children, createEffect, createMemo, createSignal, For, onCleanup, onMount, Show, type JSX } from "solid-js";
+import { children, createMemo, createSignal, For, onCleanup, onMount, Show, type JSX } from "solid-js";
 import { Portal } from "solid-js/web";
 import './SortableList.scss'
 import { createWritableMemo } from "@solid-primitives/memo";
@@ -11,39 +11,17 @@ import Icon, { Icons } from "./Icon";
 export default function SortableList<Item, U extends JSX.Element>(props: { 
     portal_selector: HTMLElement, 
     list: Item[], 
-    swap_item: (a: number, b: number) => void,
+    set_ordered: (list: Item[]) => void,
     children: (item: Item, index: () => number) => U ,
     dragging: (item: Item) => U
 }) {
-
-    const dragging_swap_info = createMemo<[number, number]>(() => {
-        let new_list = dragging_list()
-        let old_list = props.list
-
-
-        let a = -1, b = -1
-
-        for (let i = 0; i < new_list.length; i++) {
-
-            if (new_list[i] !== old_list[i]) {
-
-                a = i
-                b = new_list.findIndex(_ => _.item === old_list[i])
-                break
-            }
-        }
-
-        return [a, b]
-    })
-    createEffect(() => {
-        console.log(dragging_swap_info())
-    })
 
     const [dragging_item, set_dragging_item] = createSignal<{ item: Item } | undefined>(undefined)
 
     const [dragging_list, set_dragging_list] = createWritableMemo(() => props.list.map(item => ({ item })))
 
     const dragging_i = createMemo(() => dragging_item() ? dragging_list().indexOf(dragging_item()!): -1)
+
 
     const sort_by_swapping = (a: number, b: number) => {
 
@@ -155,7 +133,7 @@ export default function SortableList<Item, U extends JSX.Element>(props: {
                 set_dragging_item(undefined)
                 loop.stop()
 
-                props.swap_item(...dragging_swap_info())
+                props.set_ordered(dragging_list().map(_ => _.item))
 
                 props.portal_selector.classList.remove('active')
             }
