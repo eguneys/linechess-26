@@ -34,7 +34,6 @@ export type OpeningsState = {
     global_playlists: Paged<OpeningsPlaylist> | undefined
     mine_recent_playlists: OpeningsPlaylist[] | undefined
     global_recent_playlists: OpeningsPlaylist[] | undefined
-    searched_lines: Paged<OpeningsLine> | undefined
     searched_playlists: Paged<OpeningsPlaylist> | undefined
     undo_action?: UndoActionModel | undefined
 }
@@ -70,13 +69,13 @@ export function create_openings_store(): OpeningsStore {
 
     const [selected_playlist_id, set_selected_playlist_id] = createSignal<OpeningsPlaylistId | undefined>(undefined, { equals: false})
 
-    const [fetch_mine_playlists, set_fetch_mine_playlists] = createSignal(undefined, { equals: false })
-    const [fetch_liked_playlists, set_fetch_liked_playlists] = createSignal(undefined, { equals: false })
-    const [fetch_global_playlists, set_fetch_global_playlists] = createSignal(undefined, { equals: false })
-    const [fetch_mine_recent_playlists, set_fetch_mine_recent_playlists] = createSignal(undefined, { equals: false })
-    const [fetch_global_recent_playlists, set_fetch_global_recent_playlists] = createSignal(undefined, { equals: false })
-    const [fetch_searched_lines, set_fetch_searched_lines] = createSignal(undefined, { equals: false })
-    const [fetch_searched_playlists, set_fetch_searched_playlists] = createSignal(undefined, { equals: false })
+    const [fetch_mine_playlists, set_fetch_mine_playlists] = createSignal(true, { equals: false })
+    const [fetch_liked_playlists, set_fetch_liked_playlists] = createSignal(true, { equals: false })
+    const [fetch_global_playlists, set_fetch_global_playlists] = createSignal(true, { equals: false })
+    const [fetch_mine_recent_playlists, set_fetch_mine_recent_playlists] = createSignal(true, { equals: false })
+    const [fetch_global_recent_playlists, set_fetch_global_recent_playlists] = createSignal(true, { equals: false })
+    const [fetch_searched_lines, set_fetch_searched_lines] = createSignal(false, { equals: false })
+    const [fetch_searched_playlists, set_fetch_searched_playlists] = createSignal(false, { equals: false })
 
     const get_selected_playlist_model = createAsync<Result<SelectedPlaylistModel>>(async () => {
 
@@ -98,7 +97,7 @@ export function create_openings_store(): OpeningsStore {
         if (!fetch_liked_playlists()) {
             return Result.err(new Error('No Fetch Requested'))
         }
-        return $agent.get_mine_playlists()
+        return $agent.get_liked_playlists()
     })
     const get_global_playlists = createAsync(async () => {
         if (!fetch_global_playlists()) {
@@ -110,25 +109,19 @@ export function create_openings_store(): OpeningsStore {
         if (!fetch_mine_recent_playlists()) {
             return Result.err(new Error('No Fetch Requested'))
         }
-        return $agent.get_mine_playlists()
+        return $agent.get_mine_recent_playlists()
     })
     const get_global_recent_playlists = createAsync(async () => {
         if (!fetch_global_recent_playlists()) {
             return Result.err(new Error('No Fetch Requested'))
         }
-        return $agent.get_global_playlists()
-    })
-    const get_searched_lines = createAsync(async () => {
-        if (!fetch_searched_lines()) {
-            return Result.err(new Error('No Fetch Requested'))
-        }
-        return $agent.get_searched_lines()
+        return $agent.get_global_recent_playlists()
     })
     const get_searched_playlists = createAsync(async () => {
         if (!fetch_searched_playlists()) {
             return Result.err(new Error('No Fetch Requested'))
         }
-        return $agent.get_searched_lines()
+        return $agent.get_searched_playlists()
     })
 
     function update_fetch_global_playlists(_: OpeningsPlaylist) {
@@ -172,9 +165,6 @@ export function create_openings_store(): OpeningsStore {
         },
         get global_recent_playlists() {
             return get_global_recent_playlists()?.unwrap()
-        },
-        get searched_lines() {
-            return get_searched_lines()?.unwrap()
         },
         get searched_playlists() {
             return get_searched_playlists()?.unwrap()
@@ -242,10 +232,10 @@ export function create_openings_store(): OpeningsStore {
             let res = await $agent.add_line_to_playlist(id, line_id)
             return res.map(_ => {
                 set_selected_playlist_id(id)
-                set_fetch_global_playlists()
-                set_fetch_global_recent_playlists()
-                set_fetch_mine_playlists()
-                set_fetch_mine_recent_playlists()
+                set_fetch_global_playlists(true)
+                set_fetch_global_recent_playlists(true)
+                set_fetch_mine_playlists(true)
+                set_fetch_mine_recent_playlists(true)
             })
         },
         create_playlist: async function (name: string, line?: OpeningsLineId): Promise<Result<OpeningsPlaylist>> {
@@ -253,10 +243,10 @@ export function create_openings_store(): OpeningsStore {
 
            res.map(_ => {
                set_selected_playlist_id(_._id)
-               set_fetch_global_playlists()
-               set_fetch_global_recent_playlists()
-               set_fetch_mine_playlists()
-               set_fetch_mine_recent_playlists()
+               set_fetch_global_playlists(true)
+               set_fetch_global_recent_playlists(true)
+               set_fetch_mine_playlists(true)
+               set_fetch_mine_recent_playlists(true)
            })
 
            return res
@@ -266,10 +256,10 @@ export function create_openings_store(): OpeningsStore {
 
            res.map(_ => {
                set_selected_playlist_id(undefined)
-               set_fetch_global_playlists()
-               set_fetch_global_recent_playlists()
-               set_fetch_mine_playlists()
-               set_fetch_mine_recent_playlists()
+               set_fetch_global_playlists(true)
+               set_fetch_global_recent_playlists(true)
+               set_fetch_mine_playlists(true)
+               set_fetch_mine_recent_playlists(true)
            })
 
             return res.map(() => {})
@@ -292,7 +282,7 @@ export function create_openings_store(): OpeningsStore {
         like_playlist: async function (id: OpeningsPlaylistId, yes: boolean): Promise<Result<void>> {
             let res = await $agent.like_playlist(id, yes)
 
-            set_fetch_liked_playlists()
+            set_fetch_liked_playlists(true)
 
             if (state.playlist && state.playlist.playlist._id === id) {
                 set_state('playlist', 'playlist', 'nb_likes', _ => yes ? _ + 1 : _ - 1)
@@ -303,7 +293,7 @@ export function create_openings_store(): OpeningsStore {
         like_line: async function (id: OpeningsLineId, yes: boolean): Promise<Result<void>> {
             let res = await $agent.like_line(id, yes)
 
-            set_fetch_liked_playlists()
+            set_fetch_liked_playlists(true)
 
             if (state.playlist) {
                 set_state('playlist', 'lines', _ => _._id === id, 'nb_likes', _ => yes ? _ + 1 : _ - 1)
@@ -314,23 +304,23 @@ export function create_openings_store(): OpeningsStore {
         next_playlist_page: async function (i: SetPageNavigate): Promise<void> {
             await $agent.next_playlist_page(i)
 
-            set_fetch_global_playlists()
+            set_fetch_global_playlists(true)
         },
         next_searched_lines_page: async function (i: SetPageNavigate): Promise<void> {
             await $agent.next_searched_lines_page(i)
 
-            set_fetch_searched_lines()
+            set_fetch_searched_lines(fetch_searched_lines())
         },
         next_searched_playlist_page: async function (i: SetPageNavigate): Promise<void> {
             await $agent.next_searched_lines_page(i)
 
-            set_fetch_searched_playlists()
+            set_fetch_searched_playlists(fetch_searched_playlists())
         },
         set_search_lines_term: async function (term: SearchTerm): Promise<void> {
             await $agent.set_search_lines_term(term)
 
-            set_fetch_searched_playlists()
-            set_fetch_searched_lines()
+            set_fetch_searched_playlists(true)
+            set_fetch_searched_lines(true)
         },
         undo: async function (): Promise<void> {
             await $agent.undo()
@@ -338,13 +328,13 @@ export function create_openings_store(): OpeningsStore {
             // TODO focused refresh
             set_selected_playlist_id(selected_playlist_id())
 
-            set_fetch_mine_playlists()
-            set_fetch_liked_playlists()
-            set_fetch_global_playlists()
-            set_fetch_mine_recent_playlists()
-            set_fetch_global_recent_playlists()
-            set_fetch_searched_lines()
-            set_fetch_searched_playlists()
+            set_fetch_mine_playlists(true)
+            set_fetch_liked_playlists(true)
+            set_fetch_global_playlists(true)
+            set_fetch_mine_recent_playlists(true)
+            set_fetch_global_recent_playlists(true)
+            set_fetch_searched_lines(false)
+            set_fetch_searched_playlists(false)
 
 
             return

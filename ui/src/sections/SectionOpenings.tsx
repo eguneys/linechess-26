@@ -15,7 +15,7 @@ import ActionButton, { Actions } from '../components/ActionButton'
 import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from '../components/ModalBlocks'
 import TextInputHighlight from '../components/TextInputHighlight'
 import { useStore } from '../state/OpeningsState'
-import type { OpeningsLine } from '../state/types'
+import type { OpeningsLine, OpeningsPlaylist } from '../state/types'
 
 
 type OpeningsBuildState = {
@@ -234,6 +234,8 @@ const OpeningsPlaylistView = () => {
         state.global_playlists?.list
     )
 
+    const selected_playlist = createMemo(() => state.playlist?.playlist)
+
     const lines = createMemo(() => state.playlist?.lines)
 
     return (<>
@@ -263,14 +265,18 @@ const OpeningsPlaylistView = () => {
                     <For each={playlist()}>{item =>
                         <li class='item'>
                             <div class='title'>{item.name}</div>
-                            <div class='nb'>50 lines</div>
+                            <div class='likes'>{item.nb_likes} <Icon icon={Icons.HeartFilled}></Icon></div>
+                            <div class='nb'>{item.nb_lines} lines</div>
                         </li>
                     }</For>
                 </ul>
             </div>
             <div class='info'>
-                <PlaylistInfo />
-
+                <Show when={selected_playlist()} fallback={
+                    <span class='no-playlist'>Please Select a Playlist</span>
+                }>{ playlist=> 
+                    <PlaylistInfo playlist={playlist()} />
+                }</Show>
             </div>
             <div class='lines'>
                 <Show when={lines()} fallback={
@@ -292,15 +298,14 @@ const OpeningsPlaylistView = () => {
 
 }
 
-const PlaylistInfo = () => {
-
+const PlaylistInfo = (props: { playlist: OpeningsPlaylist }) => {
 
     const [is_edit_playlist_item_modal_open, set_is_edit_playlist_item_modal_open] = createSignal(false, { equals: false })
 
     return (<>
-        <div class='title'>1.e4 Sicilian Defense Scandinavian Defense More Alekhine Queen's G D</div>
+        <div class='title'>{props.playlist.name}</div>
         <div class='more'>
-            <Heart nb_heart={900} is_heart={false} on_heart={() => { }} />
+            <Heart nb_heart={props.playlist.nb_likes} is_heart={false} on_heart={() => { }} />
             <DropdownMenu
                 portal_selector={document.querySelector('.dropdown-menu-portal')!}
                 button={

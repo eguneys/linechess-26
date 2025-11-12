@@ -1,11 +1,14 @@
 import { Result } from "@badrap/result";
 import type { Color, OpeningsLine, OpeningsPlaylist } from "./types"
-import type { SelectedPlaylistModel } from "./create_openings_store";
+import type { Paged, SelectedPlaylistModel } from "./create_openings_store";
 
 export type OpeningsAgent = {
-    get_searched_lines(): any;
-    get_global_playlists(): any;
-    get_mine_playlists(): any;
+    get_searched_playlists(): Promise<Result<Paged<OpeningsPlaylist>>>;
+    get_global_recent_playlists(): Promise<Result<OpeningsPlaylist[]>>;
+    get_mine_recent_playlists(): Promise<Result<OpeningsPlaylist[]>>;
+    get_liked_playlists(): Promise<Result<OpeningsPlaylist[]>>;
+    get_global_playlists(): Promise<Result<Paged<OpeningsPlaylist>>>;
+    get_mine_playlists(): Promise<Result<OpeningsPlaylist[]>>;
     get_selected_playlist_model(id: string): Promise<Result<SelectedPlaylistModel>>;
     undo(): Promise<void>;
     set_search_lines_term(term: string): Promise<void>;
@@ -88,17 +91,26 @@ export function create_openings_agent(): OpeningsAgent {
         swap_line: function (a: string, b: string): Promise<Result<void>> {
             return $post('/line/swap', { a, b }).then(wrap_result)
         },
-        get_searched_lines: function () {
-            return $('/search/line')
+        get_searched_playlists: function () {
+            return $('/playlist/search').then(wrap_result)
+        },
+        get_global_recent_playlists: function () {
+            return $('/playlist/global/recent').then(wrap_result)
+        },
+        get_mine_recent_playlists: function () {
+            return $('/playlist/mine/recent').then(wrap_result)
         },
         get_global_playlists: function () {
-            return $('/playlist/global')
+            return $('/playlist/global').then(wrap_result)
         },
         get_mine_playlists: function () {
-            return $('/playlist/mine')
+            return $('/playlist/mine').then(wrap_result)
+        },
+        get_liked_playlists: function () {
+            return $('/playlist/liked').then(wrap_result)
         },
         get_selected_playlist_model: function (id: string): Promise<Result<SelectedPlaylistModel>> {
-            return $(`/playlist/selected/${id}`)
+            return $(`/playlist/selected/${id}`).then(wrap_result)
         },
     }
 }
