@@ -14,6 +14,9 @@ importers:
       better-sqlite3-session-store:
         specifier: ^0.1.0
         version: 0.1.0
+      body-parser:
+        specifier: ^2.2.0
+        version: 2.2.0
       cors:
         specifier: ^2.8.5
         version: 2.8.5

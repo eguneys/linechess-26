@@ -499,7 +499,13 @@ app.use(defaultErrorHandler)
 
 
 // --- Start ---
-const PORT = 3300;
+const PORT = process.env.PORT || 3300;
 initDb().then(() => {
-    app.listen(PORT, () => console.log(`✅ Backend running on http://localhost:${PORT}`));
+    app.listen(PORT, (err) => {
+        if (err) {
+            console.error(err)
+        } else {
+            console.log(`✅ Backend running on http://localhost:${PORT}`)
+        }
+    });
 });
