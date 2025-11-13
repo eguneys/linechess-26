@@ -65,7 +65,7 @@ export type OpeningsStore = [OpeningsState, OpeningsActions]
 
 export function create_openings_store(): OpeningsStore {
 
-    const [,{ import_UCIs}] = useBuildStore()
+    const [,{ set_orientation, import_UCIs }] = useBuildStore()
 
     let $agent = create_openings_agent()
 
@@ -213,10 +213,13 @@ export function create_openings_store(): OpeningsStore {
     let actions: OpeningsActions = {
         select_line(id: OpeningsLineId) {
             set_selected_line_id(id)
-            let moves = state.selected_line?.moves
-            if (moves !== undefined) {
-                import_UCIs(moves)
+            let line = state.selected_line
+
+            if (!line) {
+                return
             }
+            import_UCIs(line.moves)
+            set_orientation(line.orientation)
         },
         select_playlist(id: OpeningsPlaylistId) {
             set_selected_playlist_id(id)
@@ -256,6 +259,9 @@ export function create_openings_store(): OpeningsStore {
 
             if (state.playlist) {
                 set_state('playlist', 'lines', state.playlist.lines.filter(_ => _._id !== id))
+                if (selected_line_id() === id) {
+                    set_selected_line_id(state.playlist.lines[0]?._id)
+                }
             }
             return res
         },

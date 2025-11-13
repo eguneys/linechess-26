@@ -271,16 +271,62 @@ app.post("/playlist/add", async (req, res) => {
 });
 
 app.post("/line/delete", async (req, res) => {
-    const { id } = req.body;
-    await db.run(`DELETE FROM lines WHERE id=?`, [id]);
+    const { id } = req.body
+    await db.prepare(`DELETE FROM line_likes WHERE line_id=?`).run([id]);
+    await db.prepare(`DELETE FROM lines WHERE id=?`).run([id]);
     res.json(ok(null));
 });
 
+/*
 app.post("/line/edit", async (req, res) => {
     const { id, name, moves, orientation } = req.body;
-    await db.run(`UPDATE lines SET name=?, moves=?, orientation=? WHERE id=?`, [name, moves, orientation, id]);
-    const line = await db.get(`SELECT * FROM lines WHERE id=?`, [id]);
-    res.json(ok(line));
+
+    await db.prepare(`UPDATE lines SET name=?, moves=?, orientation=? WHERE id=?`).run([name, moves, orientation, id]);
+    const line = await db.prepare(`SELECT * FROM lines WHERE id=?`).get([id]);
+    res.json(ok(line_view_json(line)));
+});
+*/
+
+app.post("/line/edit", async (req, res) => {
+    const { id, name, moves, orientation } = req.body;
+    
+    if (!id) {
+        return res.status(400).json({ error: "ID is required" });
+    }
+
+    // Build dynamic update query
+    const updates = [];
+    const params = [];
+
+    if (name !== undefined) {
+        updates.push("name = ?");
+        params.push(name);
+    }
+    if (moves !== undefined) {
+        updates.push("moves = ?");
+        params.push(moves);
+    }
+    if (orientation !== undefined) {
+        updates.push("orientation = ?");
+        params.push(orientation);
+    }
+
+    // If no fields to update, return early
+    if (updates.length === 0) {
+        const line = await db.prepare(`SELECT * FROM lines WHERE id=?`).get([id]);
+        return res.json(ok(line_view_json(line)));
+    }
+
+    // Add ID to params for WHERE clause
+    params.push(id);
+
+    // Execute update
+    const query = `UPDATE lines SET ${updates.join(", ")} WHERE id=?`;
+    await db.prepare(query).run(params);
+
+    // Return updated line
+    const line = await db.prepare(`SELECT * FROM lines WHERE id=?`).get([id]);
+    res.json(ok(line_view_json(line)));
 });
 
 app.post("/line/create", async (req, res) => {

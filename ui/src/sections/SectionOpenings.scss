@@ -140,6 +140,12 @@
                     -webkit-user-select: none;
                     user-select: none;
                     cursor: pointer;
+
+                    &.disabled {
+                        color: theme.$dark-grey;
+                        opacity: .8;
+                        cursor: default;
+                    }
                 }
 
                 .action {

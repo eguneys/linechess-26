@@ -3,9 +3,9 @@ import './SectionOpenings.scss'
 import { createEffect, createMemo, createSelector, createSignal, For, on, onCleanup, onMount, Show, } from 'solid-js'
 import { MeetButton } from '../components/MeetButton'
 import ReplaySingle from '../components/ReplaySingle'
-import type { Color, Key } from '@lichess-org/chessground/types'
+import type { Key } from '@lichess-org/chessground/types'
 import { fen_pos } from '../components/steps'
-import { opposite, parseSquare } from 'chessops'
+import { parseSquare } from 'chessops'
 import SortableList from '../components/SortableList'
 import DropdownMenu from '../components/DropdownMenu'
 import Icon, { Icons } from '../components/Icon'
@@ -25,6 +25,7 @@ import type { SelectedPlaylistModel } from '../state/create_openings_store'
 export const SectionOpenings = () => {
 
     let [obs, {
+        flip,
         add_uci_and_goto_it,
         goto_next_step,
         goto_prev_step,
@@ -60,11 +61,6 @@ export const SectionOpenings = () => {
         }
     }
 
-    let [orientation, set_orientation] = createSignal<Color>('white')
-
-    const on_flip = () => {
-        set_orientation(opposite(orientation()))
-    }
 
     const [copied, set_copied] = createSignal(false)
     const Copy = createMemo(() => copied() ? 'Copied!': 'Copy')
@@ -109,7 +105,7 @@ export const SectionOpenings = () => {
             return
         }
 
-        await create_line(name, moves, orientation())
+        await create_line(name, moves, obs.orientation)
         set_line_name_value('')
         line_name = ''
     }
@@ -120,11 +116,11 @@ export const SectionOpenings = () => {
             <h3>Build</h3>
             <div class='board-wrap'>
                 <div class='board' on:wheel={{ handleEvent: make_onWheel(set_on_wheel_board), passive: false }}>
-                    <PlayUciBoard fen={obs.fen} play_orig_key={play_orig_key} turn_color={obs.turn_color} movable_color={obs.turn_color} orientation={orientation()} last_move_uci={obs.last_move_uci} />
+                    <PlayUciBoard fen={obs.fen} play_orig_key={play_orig_key} turn_color={obs.turn_color} movable_color={obs.turn_color} orientation={obs.orientation} last_move_uci={obs.last_move_uci} />
                 </div>
             </div>
             <div class='board-tools'>
-                <a onClick={on_flip}>Flip</a>
+                <a onClick={flip}>Flip</a>
             </div>
         </div>
         <div class='explore'>
@@ -160,7 +156,7 @@ export const SectionOpenings = () => {
                 portal_selector={document.querySelector('.modal-portal')!}>
                 {({ toggle, set_hold_close_outside }) =>
                     <>
-                        <a onClick={() => toggle(true)}><small>+ Add to Playlist</small></a>
+                        <a class='disabled' onClick={() => toggle(true)}> <small>+ Add to Playlist</small></a>
                         <AddToPlaylistModalContent toggle={toggle} set_hold_close_outside={set_hold_close_outside} />
                     </>
                 }</Modal>
@@ -376,7 +372,7 @@ const PlaylistInfo = (props: { playlist: OpeningsPlaylist }) => {
 
 const OpeningPlayListItem = (item: OpeningsLine) => {
 
-    const [state,{select_line}] = useStore()
+    const [state,{select_line, delete_line}] = useStore()
 
     const [is_edit_line_modal_open, set_is_edit_line_modal_open] = createSignal(false, { equals: false })
 
@@ -408,7 +404,7 @@ const OpeningPlayListItem = (item: OpeningsLine) => {
                         Edit <Icon icon={Icons.Gears}></Icon>
                     </div>
                     </li>
-                    <li class='red'>Delete <Icon icon={Icons.Delete}></Icon></li>
+                    <li onClick={() => delete_line(item._id)} class='red'>Delete <Icon icon={Icons.Delete}></Icon></li>
                 </ul>
             </DropdownMenu>
         </div>
@@ -416,10 +412,10 @@ const OpeningPlayListItem = (item: OpeningsLine) => {
                 close_on_click_outside={true}
                 open={is_edit_line_modal_open()}
                 portal_selector={document.querySelector('.modal-portal')!}>
-                {({ toggle }) =>
+                {({ open, toggle }) =>
                     <>
 
-                        <EditLineModalContent toggle={toggle} />
+                        <EditLineModalContent line={item} open={open} toggle={toggle} />
                     </>
                 }</Modal>
     </div>
@@ -432,16 +428,44 @@ const OpeningPlayListItemDragging = (item: OpeningsLine) => {
     </>)
 }
 
-const EditLineModalContent = (props: { toggle: (open?: boolean) => void }) => {
+const EditLineModalContent = (props: { line: OpeningsLine, open: () => boolean, toggle: (open?: boolean) => void }) => {
 
+    let [error, set_error] = createSignal<string | undefined>(undefined)
+    const [, {edit_line }] = useStore()
+
+    let [submit_value, set_submit_value] = createSignal('')
 
     const on_line_name_changed = (value: string, is_submit: boolean) => {
+        set_submit_value(value)
         if (is_submit) {
-            console.log(value)
-            props.toggle(false)
+            on_submit()
+        }
+    }
+
+    const on_submit = () => {
+
+        if (submit_value().length < 3) {
+            set_error('Line Name must be at least 3 characters long.')
+            return
         }
 
+
+        set_error(undefined)
+
+
+        edit_line(props.line._id, submit_value())
+        props.toggle(false)
     }
+
+    createEffect(on(props.open, is_open => {
+        if (!is_open) {
+            set_error(undefined)
+            set_submit_value('')
+        }
+    }))
+
+
+
 
     return (<>
         <ModalContent>
@@ -450,13 +474,14 @@ const EditLineModalContent = (props: { toggle: (open?: boolean) => void }) => {
 
             </ModalHeader>
             <ModalBody>
-                <TextInputHighlight placeholder="Line Name" on_keyup={on_line_name_changed}/>
+                <ErrorLine error={error()} />
+                <TextInputHighlight value={submit_value()} placeholder="Line Name" on_keyup={on_line_name_changed}/>
             </ModalBody>
             <ModalFooter>
                 <ActionButton action={Actions.Cancel} onClick={() => props.toggle(false)}>
                     Cancel
                 </ActionButton>
-                <ActionButton action={Actions.Ok} onClick={() => props.toggle(false)}>
+                <ActionButton action={Actions.Ok} onClick={on_submit}>
                     Ok
                 </ActionButton>
             </ModalFooter>
@@ -509,7 +534,6 @@ const EditPlaylistItemModalContent = (props: { playlist: OpeningsPlaylist, open:
         <ModalContent>
             <ModalHeader>
                 <h3>Edit Playlist</h3> 
-
             </ModalHeader>
             <ModalBody>
                 <ErrorLine error={error()} />

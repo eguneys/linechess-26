@@ -2,8 +2,10 @@ import { batch, createContext, createMemo, createSignal, type JSX, useContext } 
 import type { Color, FEN, SAN, UCI } from "./types"
 import { fen_turn, steps_add_uci, steps_export_PGN, steps_export_UCI, steps_make_from_UCIs, type Step } from "../components/steps"
 import { INITIAL_FEN } from "chessops/fen"
+import { opposite } from "chessops"
 
 type OpeningsBuildState = {
+    orientation: Color
     fen: FEN
     turn_color: Color
     san_moves: SAN[]
@@ -14,6 +16,8 @@ type OpeningsBuildState = {
 }
 
 type OpeningsBuildActions = {
+    flip(): void
+    set_orientation(color: Color): void
     add_uci_and_goto_it(uci: UCI): void
     goto_next_step(): void
     goto_prev_step(): void
@@ -29,6 +33,7 @@ type OpeningsBuildStore = [OpeningsBuildState, OpeningsBuildActions]
 
 const OpeningsBuildStore = (): OpeningsBuildStore => {
 
+    let [orientation, set_orientation] = createSignal<Color>('white')
 
     let [cursor, set_cursor] = createSignal(0)
     const [steps, set_steps] = createSignal<Step[]>([])
@@ -46,6 +51,9 @@ const OpeningsBuildStore = (): OpeningsBuildStore => {
     const import_UCIs = (ucis: string) => set_steps(steps_make_from_UCIs(ucis.split(' ')))
 
     let state = {
+        get orientation() {
+            return orientation()
+        },
         get cursor() {
             return cursor()
         },
@@ -78,7 +86,12 @@ const OpeningsBuildStore = (): OpeningsBuildStore => {
     }
 
     let actions = {
+
+        flip() {
+            set_orientation(opposite(orientation()))
+        },
         import_UCIs,
+        set_orientation,
         add_uci_and_goto_it(uci: UCI) {
             batch(() => {
                 let ss = steps_upto_cursor_moves()
