@@ -97,7 +97,31 @@
                 }
             }
 
+            .line-info {
 
+                display: flex;
+                flex-flow: column;
+                margin-left: 1em;
+
+                .playlist-info {
+                        display: flex;
+                        gap: 0.5em;
+                        border-left: 1px solid theme.$light-peach;
+                
+                        .name {
+                            margin-left: 0.3em;
+                            font-weight: bold;
+                        }
+                
+                        .author {
+                            font-weight: 500;
+                        }
+                    }
+            }
+
+            .error-info {
+                padding: 1em;
+            }
 
             .tools {
                 padding: 0 1em;
@@ -212,6 +236,10 @@
                                 min-width: 0;
                             
                             &:hover {
+                                background: theme.$pink;
+                            }
+
+                            &.active {
                                 background: theme.$dark-purple;
                             }
 
@@ -266,6 +294,15 @@
                         button, i {
                         font-size: 1em;
                         }
+                    }
+
+                    &:hover {
+                        background: theme.$blue;
+                    }
+
+                    &.active {
+                        background: theme.$dark-purple;
+                        color: theme.$white;
                     }
                 }
             }

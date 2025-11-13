@@ -51,9 +51,6 @@ app.get("/session/init", async (req, res) => {
         const id = uuidv4_user();
         await db.prepare(`INSERT INTO users (id) VALUES (?)`).run([id]);
         req.session.userId = id;
-
-        db_insert_playlist(db, id, WorkingPlaylistName)
-
         console.log("🆕 Created guest user:", id);
     }
     res.json({ ok: true });
@@ -62,7 +59,7 @@ app.get("/session/init", async (req, res) => {
 
 function requireSession(req, res, next) {
     if (!req.session.userId) {
-        return res.status(401).json({ ok: false, error: "No session" });
+        return res.status(401).json(error("No session"));
     }
     next();
 }
@@ -165,7 +162,7 @@ async function db_insert_playlist(db, userId, name, line) {
 
 // --- Utility ---
 function ok(data) { return { ok: true, data }; }
-function err(message) { return { ok: false, error: message }; }
+function error(message) { return { ok: false, errors: message }; }
 
 function playlist_view_json(playlist) {
     return {
@@ -191,6 +188,14 @@ function line_view_json(line) {
     }
 }
 
+function paginated(page, pageSize, count, list) {
+    return {
+        max_per_page: pageSize,
+        nb_pages: Math.ceil(count / pageSize),
+        page,
+        list
+    }
+}
 
 
 // --- Routes ---
@@ -237,9 +242,9 @@ app.post("/playlist/like", async (req, res) => {
 
 app.post("/playlist/edit", async (req, res) => {
     const { id, body } = req.body;
-    await db.run(`UPDATE playlists SET name=? WHERE id=?`, [body.name, id]);
-    const playlist = await db.get(`SELECT * FROM playlists WHERE id=?`, [id]);
-    res.json(ok(playlist));
+    await db.prepare(`UPDATE playlists SET name=? WHERE id=?`).run(body.name, id);
+    const playlist = await db.prepare(`SELECT * FROM playlists WHERE id=?`).get(id);
+    res.json(ok(playlist_view_json(playlist)));
 });
 
 app.post("/playlist/create", async (req, res) => {
@@ -253,8 +258,9 @@ app.post("/playlist/create", async (req, res) => {
 
 app.post("/playlist/delete", async (req, res) => {
     const { id } = req.body;
-    await db.run(`DELETE FROM playlists WHERE id=?`, [id]);
-    await db.run(`DELETE FROM lines WHERE playlist_id=?`, [id]);
+    await db.prepare(`DELETE FROM playlist_likes WHERE playlist_id=?`).run([id]);
+    await db.prepare(`DELETE FROM lines WHERE playlist_id=?`).run([id]);
+    await db.prepare(`DELETE FROM playlists WHERE id=?`).run([id]);
     res.json(ok(null));
 });
 
@@ -285,7 +291,6 @@ app.post("/line/create", async (req, res) => {
     if (playlist_id === undefined) {
         playlist_id = (await db.prepare(`SELECT id FROM playlists WHERE name=? AND user_id=?`).get([WorkingPlaylistName, userId])).id
     }
-
 
     const { slot } = await db.prepare(`SELECT COUNT(*) as slot FROM lines WHERE playlist_id=?`).get([playlist_id]);
 
@@ -340,8 +345,21 @@ app.get("/playlist/mine/recent", async (req, res) => {
 });
 
 app.get("/playlist/global", async (req, res) => {
-    const playlists = await db.prepare(`SELECT * FROM playlists`).all();
-    res.json(ok(playlists));
+    let page = parseInt(req.query.page) || 1
+    const pageSize = 20
+    const offset = (page - 1) * pageSize
+    const { count } = await db.prepare(`SELECT COUNT(*) as count FROM playlists`).get()
+
+    const playlists = await db.prepare(`
+        SELECT * FROM playlists
+        INNER JOIN users
+        ON users.lichess_id IS NOT null
+        AND users.id = playlists.user_id
+        AND name <> 'Working Lines'
+        ORDER BY created_at DESC
+        LIMIT ? OFFSET ?
+        `).all([pageSize, offset]);
+    res.json(paginated(page, pageSize, count, playlists.map(playlist_view_json)));
 });
 
 app.get("/playlist/mine", async (req, res) => {
@@ -360,28 +378,34 @@ app.get("/playlist/liked", async (req, res) => {
     const userId = req.session.userId
 
     const playlists = await db.prepare(`
-        SELECT playlists.* 
+        SELECT p.*,
+        (SELECT COUNT(*) FROM lines WHERE playlist_id = p.id) as nb_lines,
+        (SELECT COUNT(*) FROM playlist_likes WHERE playlist_id = p.id AND yes = 1) as nb_likes
         FROM playlist_likes
-        INNER JOIN playlists
-        ON playlists.id = playlist_likes.playlist_id
+        INNER JOIN playlists p
+        ON p.id = playlist_likes.playlist_id
         AND playlist_likes.user_id = ? 
         AND playlist_likes.yes = 1
         `).all(userId);
-
-        console.log(playlists)
 
     res.json(playlists.map(playlist_view_json));
 });
 
 app.get("/playlist/selected", async (req, res) => {
     let userId = req.session.userId
-    const playlist = await db.prepare(`SELECT p.*,
+    let playlist = await db.prepare(`SELECT p.*,
         (SELECT COUNT(*) FROM lines WHERE playlist_id = p.id) as nb_lines,
         (SELECT COUNT(*) FROM playlist_likes WHERE playlist_id = p.id AND yes = 1) as nb_likes,
         (SELECT yes FROM playlist_likes where playlist_id = p.id AND user_id = ?) as have_liked
         FROM playlists p 
         WHERE name=? AND user_id=?`
     ).get(userId, WorkingPlaylistName, userId);
+
+
+    if (playlist === undefined) {
+        playlist = await db_insert_playlist(db, userId, WorkingPlaylistName)
+    }
+
     const lines = await db.prepare(`
         SELECT l.*,
         (SELECT COUNT(*) FROM line_likes WHERE line_id = l.id AND yes = 1) as nb_likes
@@ -402,6 +426,13 @@ app.get("/playlist/selected/:id", async (req, res) => {
         (SELECT yes FROM playlist_likes where playlist_id = p.id AND user_id = ?) as have_liked
         FROM playlists p
         WHERE id=?`).get(userId, playlist_id);
+
+
+    if (playlist === undefined) {
+        res.json(error("Playlist not found"))
+        return
+    }
+
     const lines = await db.prepare(`SELECT 
         l.*,
         (SELECT COUNT(*) FROM line_likes WHERE line_id = l.id AND yes = 1) as nb_likes 
@@ -415,7 +446,7 @@ app.get("/playlist/selected/:id", async (req, res) => {
 
 function defaultErrorHandler (err, req, res, next) {
   console.error(err)
-  res.status(500).send({ errors: err })
+  res.status(500).send({ errors: err.message })
 }
 
 app.use(defaultErrorHandler)

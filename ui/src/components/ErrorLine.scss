@@ -1,0 +1,5 @@
+@use '../base_css/theme';
+
+.error-line {
+    color: theme.$red;
+}

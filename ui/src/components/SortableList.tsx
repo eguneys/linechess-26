@@ -1,4 +1,4 @@
-import { children, createMemo, createSignal, For, onCleanup, onMount, Show, type JSX } from "solid-js";
+import { children, createMemo, createSignal, For, mapArray, onCleanup, onMount, Show, type JSX } from "solid-js";
 import { Portal } from "solid-js/web";
 import './SortableList.scss'
 import { createWritableMemo } from "@solid-primitives/memo";
@@ -18,7 +18,10 @@ export default function SortableList<Item, U extends JSX.Element>(props: {
 
     const [dragging_item, set_dragging_item] = createSignal<{ item: Item } | undefined>(undefined)
 
-    const [dragging_list, set_dragging_list] = createWritableMemo(() => props.list.map(item => ({ item })))
+    const [_dragging_list, set_dragging_list] = createWritableMemo(() => props.list)
+
+    const dragging_list = createMemo(mapArray(_dragging_list, item => ({ item })))
+
 
     const dragging_i = createMemo(() => dragging_item() ? dragging_list().indexOf(dragging_item()!): -1)
 
@@ -33,7 +36,7 @@ export default function SortableList<Item, U extends JSX.Element>(props: {
 
         ;[l[a], l[b]] = [l[b], l[a]]
 
-        set_dragging_list(l.slice(0))
+        set_dragging_list(l.slice(0).map(_ => _.item))
     }
 
     let drag: DragHandler

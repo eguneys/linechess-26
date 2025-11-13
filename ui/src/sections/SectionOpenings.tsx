@@ -1,12 +1,11 @@
 import { make_onWheel, PlayUciBoard } from '../components/PlayUciBoard'
 import './SectionOpenings.scss'
-import { batch, createEffect, createMemo, createSelector, createSignal, For, on, onCleanup, Show, } from 'solid-js'
+import { createEffect, createMemo, createSelector, createSignal, For, on, onCleanup, onMount, Show, } from 'solid-js'
 import { MeetButton } from '../components/MeetButton'
 import ReplaySingle from '../components/ReplaySingle'
-import type { Color, FEN, Key } from '@lichess-org/chessground/types'
-import { fen_pos, fen_turn, steps_add_uci, steps_export_PGN, type SAN, type Step, type UCI } from '../components/steps'
+import type { Color, Key } from '@lichess-org/chessground/types'
+import { fen_pos } from '../components/steps'
 import { opposite, parseSquare } from 'chessops'
-import { INITIAL_FEN } from 'chessops/fen'
 import SortableList from '../components/SortableList'
 import DropdownMenu from '../components/DropdownMenu'
 import Icon, { Icons } from '../components/Icon'
@@ -17,124 +16,22 @@ import TextInputHighlight from '../components/TextInputHighlight'
 import { useStore } from '../state/OpeningsState'
 import type { OpeningsLine, OpeningsPlaylist } from '../state/types'
 import { Dynamic } from 'solid-js/web'
+import { useBuildStore } from '../state/OpeningsBuildState'
+import ErrorLine from '../components/ErrorLine'
+import type { SelectedPlaylistModel } from '../state/create_openings_store'
 
-
-type OpeningsBuildState = {
-    fen: FEN
-    turn_color: Color
-    san_moves: SAN[]
-    cursor: number
-    last_move_uci?: UCI
-    export_PGN: string
-}
-
-type OpeningsBuildActions = {
-    add_uci_and_goto_it(uci: UCI): void
-    goto_next_step(): void
-    goto_prev_step(): void
-    goto_first_step(): void
-    goto_last_step(): void
-    goto_set_cursor(n: number): void
-    clear_steps(): void
-    delete_after(): void
-}
-
-
-const OpeningsBuildContext = (): [OpeningsBuildState, OpeningsBuildActions] => {
-
-
-    let [cursor, set_cursor] = createSignal(0)
-    const [steps, set_steps] = createSignal<Step[]>([])
-    const step = createMemo<Step | undefined>(() => steps()[cursor()])
-    const fen = createMemo(() => step()?.fen ?? INITIAL_FEN)
-    const turn_color = createMemo(() => fen_turn(fen()))
-    const san_moves = createMemo(() => steps().map(_ => _.san))
-    const last_move_uci = createMemo(() => step()?.uci)
-
-    const steps_upto_cursor_moves = createMemo(() => steps().slice(0, cursor() + 1))
-
-    const export_PGN = createMemo(() => steps_export_PGN(steps()))
-
-    let state = {
-        get cursor() {
-            return cursor()
-        },
-        get fen() {
-            return fen()
-        },
-        get turn_color() {
-            return turn_color()
-        },
-        get san_moves() {
-            return san_moves()
-        },
-        get last_move_uci() {
-            return last_move_uci()
-        },
-        get export_PGN() {
-            return export_PGN()
-        }
-    }
-
-    const goto_cursor_if_exists = (n: number) => {
-        if (n < 0) {
-            set_cursor(-1)
-        } else if (steps()[n] !== undefined) {
-            set_cursor(n)
-        }
-    }
-
-    let actions = {
-        add_uci_and_goto_it(uci: UCI) {
-            batch(() => {
-                let ss = steps_upto_cursor_moves()
-                let new_step = steps_add_uci(ss, uci)
-                set_steps([...ss, new_step])
-                set_cursor(steps().length - 1)
-            })
-        },
-
-        goto_next_step() {
-            goto_cursor_if_exists(cursor() + 1)
-        },
-        goto_prev_step() {
-            goto_cursor_if_exists(cursor() - 1)
-        },
-        goto_first_step() {
-            goto_cursor_if_exists(0)
-        },
-        goto_last_step() {
-            goto_cursor_if_exists(steps().length - 1)
-        },
-        goto_set_cursor(n: number) {
-            goto_cursor_if_exists(n)
-        },
-        clear_steps() {
-            set_steps([])
-            set_cursor(0)
-        },
-        delete_after() {
-            set_steps(steps_upto_cursor_moves())
-        }
-
-    }
-
-    return [state, actions]
-
-}
 
 
 export const SectionOpenings = () => {
 
     let [obs, {
-
         add_uci_and_goto_it,
         goto_next_step,
         goto_prev_step,
         goto_set_cursor,
         clear_steps,
         delete_after
-    }] = OpeningsBuildContext()
+    }] = useBuildStore()
 
     //"b1c3 b8c6 c3b1 c6b8 ".repeat(30).trim().split(" ").forEach(add_uci_and_goto_it)
 
@@ -185,13 +82,36 @@ export const SectionOpenings = () => {
         line_name = value
     }
 
-    const [,{create_line}] = useStore()
-    const on_save_line = () => {
+    const [error, _set_error] = createSignal<string | undefined>(undefined)
+    const [line_name_value, set_line_name_value] = createSignal('', { equals: false })
+
+    const set_error = (err: string) => {
+        _set_error(err)
+
+        setTimeout(() => {
+            _set_error(undefined)
+        }, 2000)
+    }
+
+    const [state,{create_line}] = useStore()
+    const on_save_line = async () => {
+
+        if (line_name === undefined || line_name.length < 3) {
+            set_error('Opening Line Name must be at least 3 characters long.')
+            return
+        }
 
         let name = line_name
-        let moves = obs.export_PGN
+        let moves = obs.export_UCI
 
-        create_line(name, moves, orientation())
+        if (moves.split(' ').length < 3) {
+            set_error('You should play at least 3 moves.')
+            return
+        }
+
+        await create_line(name, moves, orientation())
+        set_line_name_value('')
+        line_name = ''
     }
 
     return (<>
@@ -209,6 +129,13 @@ export const SectionOpenings = () => {
         </div>
         <div class='explore'>
             <h3>Explore</h3>
+            <div class='line-info-wrap'>
+                    <Show when={state.selected_line} fallback={<>
+                        <span class='no-line'>No Line Selected</span>
+                        </>}>{line =>
+                        <SelectedLineInfo line={line()} playlist={state.playlist!} />
+                    }</Show>
+            </div>
             <div class='replay-wrap'>
                     <ReplaySingle fallback={<>
                         <span>Play an opening line to save it.</span>
@@ -221,8 +148,11 @@ export const SectionOpenings = () => {
             </div>
 
 
+            <div class='error-info'>
+                &nbsp;<ErrorLine error={error()}/>
+            </div>
             <div class='tools'>
-                <TextInputHighlight size={30} on_keyup={on_line_name_changed} placeholder="Opening Line Name"></TextInputHighlight>
+                <TextInputHighlight value={line_name_value()} size={30} on_keyup={on_line_name_changed} placeholder="Opening Line Name"></TextInputHighlight>
                 <div class='action'>
                 <MeetButton meet={true} onClick={on_save_line}>Save</MeetButton>
             <Modal
@@ -242,6 +172,19 @@ export const SectionOpenings = () => {
     </>)
 }
 
+const SelectedLineInfo = (props: { line: OpeningsLine, playlist: SelectedPlaylistModel }) => {
+    return (<>
+        <div class='line-info'>
+            <div class='playlist-info'>
+                <span class='name'>{props.playlist.playlist.name}</span>
+                by
+                <span class='author'>{props.playlist.playlist.author ?? 'You'}</span>
+            </div>
+            <span class='line'>{props.line.name}</span>
+        </div>
+    </>)
+}
+
 type PlaylistFilter = 'mine' | 'liked' | 'global'
 
 const OpeningsPlaylistView = () => {
@@ -257,7 +200,7 @@ const OpeningsPlaylistView = () => {
     const filters = {
         mine: OpeningPlaylistsMineView,
         liked: OpeningPlaylistsLikedView,
-        global: OpeningPlaylistsMineView
+        global: OpeningPlaylistsGlobalView
     }
 
     return (<>
@@ -292,11 +235,28 @@ const OpeningsPlaylistView = () => {
 
 }
 
+const OpeningPlaylistsGlobalView = () => {
+
+    let [state] = useStore()
+
+    const playlists = createMemo(() => state.global_playlists?.list ?? [])
+
+    return (<>
+        <ul>
+            <For each={playlists()}>{item =>
+                <PlaylistListItem item={item} />
+            }</For>
+        </ul>
+    </>)
+}
+
+
+
 const OpeningPlaylistsLikedView = () => {
 
     let [state] = useStore()
 
-    const playlists = createMemo(() => state.liked_playlists)
+    const playlists = createMemo(() => state.liked_playlists?.list)
 
     return (<>
         <ul>
@@ -311,7 +271,7 @@ const OpeningPlaylistsMineView = () => {
 
     let [state] = useStore()
 
-    const playlists = createMemo(() => state.mine_playlists)
+    const playlists = createMemo(() => state.mine_playlists?.list)
 
     return (<>
         <ul>
@@ -336,12 +296,20 @@ const OpeningPlaylistsMineView = () => {
 }
 
 const PlaylistListItem = (props: { item: OpeningsPlaylist }) => {
-    const [,{ select_playlist}] = useStore()
+    const [state,{ select_playlist}] = useStore()
 
     const item = createMemo(() => props.item)
 
+    const is_selected = createMemo(() => state.playlist?.playlist._id === props.item._id)
+
+    onMount(() => {
+        Utility_ScrollIntoView(is_selected, $!, 'lists')
+    })
+
+    let $: HTMLLIElement | undefined
+
     return (<>
-        <li onClick={() => select_playlist(props.item._id)} class='item'>
+        <li ref={$} onClick={() => select_playlist(props.item._id)} class='item' classList={{active: is_selected()}}>
             <div class='title'>{item().name}</div>
             <div class='likes'>{item().nb_likes} <Icon icon={Icons.HeartFilled}></Icon></div>
             <div class='nb'>{item().nb_lines} lines</div>
@@ -370,7 +338,7 @@ const OpeningLines = (props: {lines: OpeningsLine[]}) => {
 
 const PlaylistInfo = (props: { playlist: OpeningsPlaylist }) => {
 
-    const [, { like_playlist }] = useStore()
+    const [, { like_playlist, delete_playlist }] = useStore()
     const [is_edit_playlist_item_modal_open, set_is_edit_playlist_item_modal_open] = createSignal(false, { equals: false })
 
     return (<>
@@ -388,7 +356,7 @@ const PlaylistInfo = (props: { playlist: OpeningsPlaylist }) => {
                             Edit <Icon icon={Icons.Gears}></Icon>
                         </div>
                     </li>
-                    <li class='red'>Delete <Icon icon={Icons.Delete}></Icon></li>
+                    <li onClick={delete_playlist} class='red'>Delete <Icon icon={Icons.Delete}></Icon></li>
                 </ul>
             </DropdownMenu>
             <Modal
@@ -398,7 +366,7 @@ const PlaylistInfo = (props: { playlist: OpeningsPlaylist }) => {
                 {({ toggle }) =>
                     <>
 
-                        <EditPlaylistItemModalContent toggle={toggle} />
+                        <EditPlaylistItemModalContent playlist={props.playlist} toggle={toggle} />
                     </>
                 }</Modal>
         </div>
@@ -408,10 +376,24 @@ const PlaylistInfo = (props: { playlist: OpeningsPlaylist }) => {
 
 const OpeningPlayListItem = (item: OpeningsLine) => {
 
+    const [state,{select_line}] = useStore()
+
     const [is_edit_line_modal_open, set_is_edit_line_modal_open] = createSignal(false, { equals: false })
 
+    const is_selected = createMemo(() => state.selected_line === item)
+
+    let $: HTMLDivElement | undefined
+
+    onMount(() => {
+        Utility_ScrollIntoView(is_selected, $!, 'sortable-list-wrap')
+    })
+
+    const on_select_line = () => {
+        select_line(item._id)
+    }
+
     return (<>
-    <div class='a-line'>
+    <div ref={$} onClick={on_select_line} class='a-line' classList={{active: is_selected()}}>
         <span class='name'>{item.name}</span>
         <div class='more'>
 
@@ -485,15 +467,21 @@ const EditLineModalContent = (props: { toggle: (open?: boolean) => void }) => {
 
 
 
-const EditPlaylistItemModalContent = (props: { toggle: (open?: boolean) => void }) => {
+const EditPlaylistItemModalContent = (props: { playlist: OpeningsPlaylist, toggle: (open?: boolean) => void }) => {
 
+    const [, {edit_playlist }] = useStore()
 
+    let submit_value: string
     const on_playlist_name_changed = (value: string, is_submit: boolean) => {
+        submit_value = value
         if (is_submit) {
-            console.log(value)
-            props.toggle(false)
+            on_submit()
         }
+    }
 
+    const on_submit = () => {
+        edit_playlist(props.playlist._id, submit_value)
+        props.toggle(false)
     }
 
     return (<>
@@ -509,7 +497,7 @@ const EditPlaylistItemModalContent = (props: { toggle: (open?: boolean) => void 
                 <ActionButton action={Actions.Cancel} onClick={() => props.toggle(false)}>
                     Cancel
                 </ActionButton>
-                <ActionButton action={Actions.Ok} onClick={() => props.toggle(false)}>
+                <ActionButton action={Actions.Ok} onClick={on_submit}>
                     Ok
                 </ActionButton>
             </ModalFooter>
@@ -524,26 +512,31 @@ const CreateNewPlaylistModalContent = (props: { open: () => boolean, toggle: (op
     let [waiting, set_waiting] = createSignal(false)
     let [, { create_playlist }] = useStore()
 
-    let submit_value: string
+    let [submit_value, set_submit_value] = createSignal('')
 
     const on_playlist_name_changed = async (value: string, is_submit: boolean) => {
-        submit_value = value
+        set_submit_value(value)
         if (is_submit) {
             submit()
         }
     }
 
     const submit = async () => {
+
+        if (submit_value().length < 3) {
+            set_error('Playlist Name must be at least 3 characters long.')
+            return
+        }
+
+
         set_waiting(true)
         set_error(undefined)
 
-        let res = await create_playlist(submit_value)
+        let res = await create_playlist(submit_value())
 
         if (res.isOk) {
             props.toggle(false)
         } else if (res.isErr) {
-
-            console.error(res.error)
             set_error(res.error.message ?? 'Something went wrong.')
         }
 
@@ -554,6 +547,7 @@ const CreateNewPlaylistModalContent = (props: { open: () => boolean, toggle: (op
         if (!is_open) {
             set_error(undefined)
             set_waiting(false)
+            set_submit_value('')
         }
     }))
 
@@ -564,7 +558,7 @@ const CreateNewPlaylistModalContent = (props: { open: () => boolean, toggle: (op
 
             </ModalHeader>
             <ModalBody>
-                <TextInputHighlight placeholder="Playlist Name" on_keyup={on_playlist_name_changed}/>
+                <TextInputHighlight value={submit_value()} placeholder="Playlist Name" on_keyup={on_playlist_name_changed}/>
                 <Show when={error()}>
                     <span class='error'>{error()}</span>
                 </Show>
@@ -640,4 +634,58 @@ const AddToPlaylistModalContent = (props: { toggle: (open?: boolean) => void, se
             </ModalBody>
         </ModalContent>
     </>)
+}
+
+
+
+
+
+const Utility_ScrollIntoView = (is_selected: () => boolean, $: HTMLElement, container_klass: string) => {
+
+
+    const find_scrollable_parent = () => {
+
+        let res: HTMLElement | null | undefined = $.parentElement
+
+        while (res !== undefined) {
+            if (res?.classList.contains(container_klass)) {
+                return res
+            }
+            res = res?.parentElement
+        }
+        return res
+    }
+
+    createEffect(on(is_selected, (is_selected) => {
+        if ($ !== undefined && is_selected) {
+            const container = find_scrollable_parent()
+            if (!container) {
+                return
+            }
+
+            /*https://stackoverflow.com/questions/73379182/trying-to-scroll-into-view-a-nested-scrollbar-elements-child*/
+    let parent = container
+    let child = $
+  // Where is the parent on page
+  var parentRect = parent.getBoundingClientRect();
+  // What can you see?
+  var parentViewableArea = {
+    height: parent.clientHeight,
+    width: parent.clientWidth
+  };
+
+  // Where is the child
+  var childRect = child.getBoundingClientRect();
+  // Is the child viewable?
+            var isViewable = (childRect.top >= parentRect.top) && (childRect.bottom <= parentRect.top + parentViewableArea.height);
+            
+            if (!isViewable) {
+            container.scroll({
+                top: $.offsetTop,
+                behavior: 'smooth'
+            })
+        }
+        }
+
+    }))
 }

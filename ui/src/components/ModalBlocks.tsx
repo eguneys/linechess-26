@@ -1,8 +1,9 @@
 
-import { createEffect, createMemo, createSignal, type JSX, mergeProps, Show, splitProps, type Accessor, type Component } from "solid-js"
+import { createEffect, createMemo, createSignal, type JSX, mergeProps, splitProps, type Accessor, type Component, Switch, Match } from "solid-js"
 import { Portal } from "solid-js/web"
 import { get_elements, type WrappedElement } from "./tools"
 import './ModalBlocks.scss'
+import { createLazyMemo } from "@solid-primitives/memo"
 
 export type WrappedModelContentProps = {
     open: Accessor<boolean>,
@@ -35,12 +36,13 @@ export const Modal = (props: ModalProps) => {
 
     const toggle = (open?: boolean) =>
         set_open(typeof open === 'boolean' ? open: (o) => !o)
-    const modal_content = createMemo(() =>
-    get_elements(
-        local.children,
-        (node) => node.className.indexOf('sb-modal-content') !== -1,
-        [{open, toggle, set_hold_close_outside}]
-    ) ?? [])
+    const modal_content = createLazyMemo(() => {
+        return get_elements(
+            local.children,
+            (node) => node.className.indexOf('sb-modal-content') !== -1,
+            [{ open, toggle, set_hold_close_outside }]
+        ) ?? []
+    })
 
     const other_children = createMemo(() =>
         get_elements(local.children,
@@ -49,11 +51,10 @@ export const Modal = (props: ModalProps) => {
         )
     )
 
-
     let modal_ref!: HTMLDivElement
     createEffect(() => open() && modal_ref?.focus(), modal_ref?.scrollIntoView())
 
-    const div_props = mergeProps(container_props, {
+    const div_props = () => mergeProps(container_props, {
         role: 'dialog' as JSX.HTMLAttributes<HTMLDivElement>['role'],
         tabIndex: -1,
         class: props.class ? `sb-modal ${props.class}` : `sb-modal`,
@@ -72,14 +73,18 @@ export const Modal = (props: ModalProps) => {
     })
 
     return (<>
-        <Show when={open()} fallback={other_children()}>
-            <>
-            {other_children()}
-            <Portal mount={local.portal_selector}>
-                <div ref={modal_ref} {...div_props}/>
-            </Portal>
-            </>
-        </Show >
+
+        <Switch>
+            <Match when={!open()}>{other_children()}</Match>
+            <Match when={open()}>
+                <>
+                    {other_children()}
+                    <Portal mount={local.portal_selector}>
+                        <div ref={modal_ref} {...div_props()} />
+                    </Portal>
+                </>
+            </Match>
+        </Switch>
     </>
     )
 }

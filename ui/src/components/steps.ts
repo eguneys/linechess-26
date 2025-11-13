@@ -33,6 +33,19 @@ export const steps_add_uci = (steps: Step[], uci: UCI) => {
     }
 }
 
+export const steps_make_from_UCIs = (ucis: UCI[]) => {
+    let steps: Step[] = []
+
+    ucis.map(uci => {
+        steps = [...steps, steps_add_uci(steps, uci)]
+    })
+    return steps
+}
+
+export const steps_export_UCI = (steps: Step[]) => {
+    return steps.map(_ => _.uci).join(' ')
+}
+
 export const steps_export_PGN = (steps: Step[]) => {
     return steps.map((_, i) => `${ply_to_index_omit_black(i + 1)}${_.san}`).join(' ')
 }

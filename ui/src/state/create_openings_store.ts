@@ -4,6 +4,8 @@ import { createStore } from "solid-js/store"
 import { create_openings_agent } from './create_agent'
 import { createAsync } from "@solidjs/router"
 import { batch, createSignal } from "solid-js"
+import { makePersisted } from "@solid-primitives/storage"
+import { useBuildStore } from "./OpeningsBuildState"
 
 export interface Paged<Content> {
     max_per_page: number
@@ -17,10 +19,6 @@ export type SelectedPlaylistModel = {
     lines: OpeningsLine[]
 }
 
-export type OpeningsLineModel = OpeningsLine & {
-    is_dirty: boolean
-}
-
 export type UndoableActionCommand = 'delete-playlist' | 'delete-line-from-playlist'
 
 export type UndoActionModel = {
@@ -28,12 +26,13 @@ export type UndoActionModel = {
 }
 
 export type OpeningsState = {
+    selected_line: OpeningsLine | undefined
     playlist: SelectedPlaylistModel | undefined
-    mine_playlists: OpeningsPlaylist[] | undefined
-    liked_playlists: OpeningsPlaylist[] | undefined
+    mine_playlists: { list: OpeningsPlaylist[] } | undefined
+    liked_playlists: { list: OpeningsPlaylist[] } | undefined
     global_playlists: Paged<OpeningsPlaylist> | undefined
-    mine_recent_playlists: OpeningsPlaylist[] | undefined
-    global_recent_playlists: OpeningsPlaylist[] | undefined
+    mine_recent_playlists: { list: OpeningsPlaylist[] } | undefined
+    global_recent_playlists: { list: OpeningsPlaylist[] } | undefined
     searched_playlists: Paged<OpeningsPlaylist> | undefined
     undo_action?: UndoActionModel | undefined
 }
@@ -42,6 +41,7 @@ export type SetPageNavigate = -1 | 0 | 1
 export type SearchTerm = string
 
 export type OpeningsActions = {
+    select_line(id: OpeningsLineId): void
     select_playlist(id: OpeningsPlaylistId): void
     create_line(name: string, moves: UCIMoves, orientation: Color): Promise<Result<OpeningsLine>>
     delete_line(id: OpeningsLineId): Promise<Result<void>>
@@ -49,7 +49,7 @@ export type OpeningsActions = {
     add_line_to_playlist(id: OpeningsPlaylistId, line_id: OpeningsLineId): Promise<Result<void>>
     set_ordered_line_slots(list: OpeningsLine[]): Promise<Result<void>>
     create_playlist(name: string, line?: OpeningsLineId): Promise<Result<OpeningsPlaylist>>
-    delete_playlist(id: OpeningsPlaylistId): Promise<Result<void>>
+    delete_playlist(): Promise<Result<void>>
     edit_playlist(id: OpeningsPlaylistId, name?: string): Promise<Result<void>>
     like_playlist(id: OpeningsPlaylistId, yes: boolean): Promise<Result<void>>
     next_playlist_page(i: SetPageNavigate): void
@@ -65,9 +65,17 @@ export type OpeningsStore = [OpeningsState, OpeningsActions]
 
 export function create_openings_store(): OpeningsStore {
 
+    const [,{ import_UCIs}] = useBuildStore()
+
     let $agent = create_openings_agent()
 
-    const [selected_playlist_id, set_selected_playlist_id] = createSignal<OpeningsPlaylistId | undefined>(undefined, { equals: false})
+    const [selected_line_id, set_selected_line_id] = makePersisted(
+        createSignal<OpeningsLineId | undefined>(undefined, { equals: false}), 
+        { name: '.linechess.selected_line_id.v1' })
+
+    const [selected_playlist_id, set_selected_playlist_id] = makePersisted(
+        createSignal<OpeningsPlaylistId | undefined>(undefined, { equals: false}), 
+        { name: '.linechess.selected_playlist_id.v1' })
 
     const [fetch_mine_playlists, set_fetch_mine_playlists] = createSignal(true, { equals: false })
     const [fetch_liked_playlists, set_fetch_liked_playlists] = createSignal(true, { equals: false })
@@ -81,11 +89,27 @@ export function create_openings_store(): OpeningsStore {
 
         let id = selected_playlist_id()
 
+        let res: Result<SelectedPlaylistModel>
         if (id === undefined) {
-            return $agent.get_working_playlist_model()
+            res = await $agent.get_working_playlist_model()
+            set_selected_playlist_id(res.unwrap().playlist._id)
+            set_fetch_mine_playlists(true)
+        } else {
+            res = await $agent.get_selected_playlist_model(id)
+
+            if (res.isErr) {
+                res = await $agent.get_working_playlist_model()
+                set_selected_playlist_id(res.unwrap().playlist._id)
+                set_fetch_mine_playlists(true)
+            }
+
         }
 
-        return $agent.get_selected_playlist_model(id)
+        res.map(_ => {
+            set_selected_line_id(_.lines[0]?._id)
+        })
+
+        return res
     })
     const get_mine_playlists = createAsync(async () => {
         if (!fetch_mine_playlists()) {
@@ -124,47 +148,62 @@ export function create_openings_store(): OpeningsStore {
         return $agent.get_searched_playlists()
     })
 
+    function update_selected_playlist(_: OpeningsPlaylist) {
+        if (state.playlist) {
+            set_state('playlist', 'playlist', _)
+        }
+    }
+
     function update_fetch_global_playlists(_: OpeningsPlaylist) {
 
         if (state.global_playlists) {
-            set_state('global_playlists', 'list', state.global_playlists.list.map(l => l._id === _._id ? _ : l))
+            set_state('global_playlists', 'list', l => l._id === _._id, _)
         }
     }
     function update_fetch_global_recent_playlists(_: OpeningsPlaylist) {
         if (state.global_recent_playlists) {
-            set_state('global_recent_playlists', state.global_recent_playlists.map(l => l._id === _._id ? _ : l))
+            set_state('global_recent_playlists', 'list', l => l._id === _._id, _)
         }
     }
     function update_fetch_mine_playlists(_: OpeningsPlaylist) {
         if (state.mine_playlists) {
-            set_state('mine_playlists', state.mine_playlists.map(l => l._id === _._id ? _ : l))
+            set_state('mine_playlists', 'list', l => l._id === _._id, _)
         }
     }
     function update_fetch_mine_recent_playlists(_: OpeningsPlaylist) {
         if (state.mine_recent_playlists) {
-            set_state('mine_recent_playlists', state.mine_recent_playlists.map(l => l._id === _._id ? _ : l))
+            set_state('mine_recent_playlists', 'list', l => l._id === _._id, _)
         }
     }
 
 
     let [state, set_state] = createStore<OpeningsState>({
+        get selected_line() {
+            let id = selected_line_id()
+            return get_selected_playlist_model()?.unwrap()
+                .lines.find(_ => _._id === id)
+        },
         get playlist() {
              return get_selected_playlist_model()?.unwrap()
         },
         get mine_playlists() {
-            return get_mine_playlists()?.unwrap()
+            let list = get_mine_playlists()?.unwrap()
+            return list ? { list } : undefined
         },
         get liked_playlists() {
-            return get_liked_playlists()?.unwrap()
+            let list = get_liked_playlists()?.unwrap()
+            return list ? { list } : undefined
         },
         get global_playlists() {
             return get_global_playlists()?.unwrap()
         },
         get mine_recent_playlists() {
-            return get_mine_recent_playlists()?.unwrap()
+            let list = get_mine_recent_playlists()?.unwrap()
+            return list ? { list } : undefined
         },
         get global_recent_playlists() {
-            return get_global_recent_playlists()?.unwrap()
+            let list = get_global_recent_playlists()?.unwrap()
+            return list ? { list } : undefined
         },
         get searched_playlists() {
             return get_searched_playlists()?.unwrap()
@@ -172,6 +211,13 @@ export function create_openings_store(): OpeningsStore {
     })
 
     let actions: OpeningsActions = {
+        select_line(id: OpeningsLineId) {
+            set_selected_line_id(id)
+            let moves = state.selected_line?.moves
+            if (moves !== undefined) {
+                import_UCIs(moves)
+            }
+        },
         select_playlist(id: OpeningsPlaylistId) {
             set_selected_playlist_id(id)
         },
@@ -184,14 +230,18 @@ export function create_openings_store(): OpeningsStore {
             }
 
             await res.map(_ => {
-                if (_._playlist_id === selected_playlist_id()) {
+                batch(() => {
+                    if (_._playlist_id === selected_playlist_id()) {
 
-                    if (state.playlist) {
-                        set_state('playlist', 'lines', state.playlist.lines.length, _)
+                        if (state.playlist) {
+                            set_state('playlist', 'lines', state.playlist.lines.length, _)
+                        }
+                    } else {
+                        set_selected_playlist_id(_._playlist_id)
                     }
-                } else {
-                    set_selected_playlist_id(_._playlist_id)
-                }
+
+                    set_selected_line_id(_._id)
+                })
             })
 
             return res
@@ -233,6 +283,7 @@ export function create_openings_store(): OpeningsStore {
         add_line_to_playlist: async function (id: OpeningsPlaylistId, line_id: OpeningsLineId): Promise<Result<void>> {
             let res = await $agent.add_line_to_playlist(id, line_id)
             return res.map(_ => {
+                set_selected_line_id(line_id)
                 set_selected_playlist_id(id)
                 set_fetch_global_playlists(true)
                 set_fetch_global_recent_playlists(true)
@@ -253,7 +304,13 @@ export function create_openings_store(): OpeningsStore {
 
            return res
         },
-        delete_playlist: async function (id: OpeningsPlaylistId): Promise<Result<void>> {
+        delete_playlist: async function (): Promise<Result<void>> {
+            let id = selected_playlist_id()
+
+            if (id === undefined) {
+                return Result.err(new Error('No Playlist Selected'))
+            }
+
             let res = await $agent.delete_playlist(id)
 
            res.map(_ => {
@@ -270,7 +327,7 @@ export function create_openings_store(): OpeningsStore {
             let res = await $agent.edit_playlist(id, { name })
 
            res.map(_ => {
-               set_selected_playlist_id(undefined)
+               update_selected_playlist(_)
                update_fetch_global_playlists(_)
                update_fetch_global_recent_playlists(_)
                update_fetch_mine_playlists(_)
