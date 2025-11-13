@@ -363,10 +363,10 @@ const PlaylistInfo = (props: { playlist: OpeningsPlaylist }) => {
                 close_on_click_outside={true}
                 open={is_edit_playlist_item_modal_open()}
                 portal_selector={document.querySelector('.modal-portal')!}>
-                {({ toggle }) =>
+                {({ open, toggle }) =>
                     <>
 
-                        <EditPlaylistItemModalContent playlist={props.playlist} toggle={toggle} />
+                        <EditPlaylistItemModalContent playlist={props.playlist} toggle={toggle} open={open} />
                     </>
                 }</Modal>
         </div>
@@ -467,22 +467,43 @@ const EditLineModalContent = (props: { toggle: (open?: boolean) => void }) => {
 
 
 
-const EditPlaylistItemModalContent = (props: { playlist: OpeningsPlaylist, toggle: (open?: boolean) => void }) => {
+const EditPlaylistItemModalContent = (props: { playlist: OpeningsPlaylist, open: () => boolean, toggle: (open?: boolean) => void }) => {
 
+    let [error, set_error] = createSignal<string | undefined>(undefined)
     const [, {edit_playlist }] = useStore()
 
-    let submit_value: string
+    let [submit_value, set_submit_value] = createSignal('')
+
     const on_playlist_name_changed = (value: string, is_submit: boolean) => {
-        submit_value = value
+        set_submit_value(value)
         if (is_submit) {
             on_submit()
         }
     }
 
     const on_submit = () => {
-        edit_playlist(props.playlist._id, submit_value)
+
+        if (submit_value().length < 3) {
+            set_error('Playlist Name must be at least 3 characters long.')
+            return
+        }
+
+
+        set_error(undefined)
+
+
+        edit_playlist(props.playlist._id, submit_value())
         props.toggle(false)
     }
+
+    createEffect(on(props.open, is_open => {
+        if (!is_open) {
+            set_error(undefined)
+            set_submit_value('')
+        }
+    }))
+
+
 
     return (<>
         <ModalContent>
@@ -491,7 +512,8 @@ const EditPlaylistItemModalContent = (props: { playlist: OpeningsPlaylist, toggl
 
             </ModalHeader>
             <ModalBody>
-                <TextInputHighlight placeholder="Playlist Name" on_keyup={on_playlist_name_changed}/>
+                <ErrorLine error={error()} />
+                <TextInputHighlight value={submit_value()} placeholder="Playlist Name" on_keyup={on_playlist_name_changed}/>
             </ModalBody>
             <ModalFooter>
                 <ActionButton action={Actions.Cancel} onClick={() => props.toggle(false)}>
@@ -559,9 +581,7 @@ const CreateNewPlaylistModalContent = (props: { open: () => boolean, toggle: (op
             </ModalHeader>
             <ModalBody>
                 <TextInputHighlight value={submit_value()} placeholder="Playlist Name" on_keyup={on_playlist_name_changed}/>
-                <Show when={error()}>
-                    <span class='error'>{error()}</span>
-                </Show>
+                <ErrorLine error={error()} />
             </ModalBody>
             <ModalFooter>
                 <ActionButton action={Actions.Cancel} onClick={() => props.toggle(false)}>
