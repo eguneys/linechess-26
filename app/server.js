@@ -567,7 +567,7 @@ initDb().then(() => {
         if (err) {
             console.error(err)
         } else {
-            console.log(`✅ Backend running on ${config.domain}:${PORT}`)
+            console.log(`✅ Backend running on ${config.domain.split(':').slice(0, -1).join(':')}:${PORT}`)
         }
     });
 });
