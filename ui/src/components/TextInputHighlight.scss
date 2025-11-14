@@ -35,7 +35,7 @@
         white-space: nowrap;
         text-overflow: ellipsis;
         top: 0.5em;
-        line-height: 100%;
+        /*line-height: 100%;*/
         transform: translateY(-50%);
         color: theme.$white;
         transition:

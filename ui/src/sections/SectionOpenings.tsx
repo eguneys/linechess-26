@@ -134,7 +134,7 @@ export const SectionOpenings = () => {
             </div>
             <div class='replay-wrap'>
                     <ReplaySingle fallback={<>
-                        <span>Play an opening line to save it.</span>
+                        <span class='no-line-to-save'>Play an opening line to save it.</span>
                     </>} san_moves={obs.san_moves} cursor={obs.cursor} on_set_cursor={goto_set_cursor} />
                 <div class='replay-tools'>
                     <a onClick={on_copy_steps}>{Copy()}</a>
@@ -156,7 +156,6 @@ export const SectionOpenings = () => {
                 portal_selector={document.querySelector('.modal-portal')!}>
                 {({ toggle, set_hold_close_outside }) =>
                     <>
-                        <a class='disabled' onClick={() => toggle(true)}> <small>+ Add to Playlist</small></a>
                         <AddToPlaylistModalContent toggle={toggle} set_hold_close_outside={set_hold_close_outside} />
                     </>
                 }</Modal>
@@ -210,6 +209,9 @@ const OpeningsPlaylistView = () => {
             </div>
             <div class='lists'>
                 <Dynamic component={filters[filter()]}></Dynamic>
+            </div>
+            <div class='room'>
+
             </div>
             <div class='info'>
                 <Show when={selected_playlist()} fallback={

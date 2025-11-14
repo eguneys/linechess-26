@@ -10,8 +10,7 @@
     padding-bottom: 2em;
 
     .replay {
-        padding: 0.8em;
-        line-height: 1.2em;
+        line-height: 1em;
 
         .move {
             font-family: 'Noto Chess';
@@ -20,11 +19,11 @@
             font-weight: 500;
             color: theme.$yellow;
             border-radius: 3px;
-            padding: 0.2em;
+            padding: 0.5em 0.28em;
 
             .index {
                 font-family: 'Montserrat';
-                font-weight: 400;
+                font-weight: 700;
                 color: theme.$blue;
                 margin-right: 0.1em;
             }

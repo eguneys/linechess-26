@@ -1,9 +1,11 @@
+@use 'sass:color';
 @use '../base_css/media';
 @use '../base_css/theme';
 
 .section-openings {
 
-    padding: 1em 0;
+    $padding-half: 0.6em;
+    $padding-full: 0.8em;
 
     .openings {
         position: relative;
@@ -48,16 +50,20 @@
 
         .build, .explore, .playlist {
             border-left: 1px solid theme.$light-peach;
-        }
 
+            border-radius: 12px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
 
         .build {
             display: flex;
             flex-flow: column;
             gap: 0.8em;
 
+
             .board-wrap {
-                padding: 0 0.5em;
+                padding: 0 $padding-full;
+                margin-top: $padding-half;
                 .board {
                     aspect-ratio: 1;
                 }
@@ -69,10 +75,11 @@
             }
 
             .board-tools {
+                margin-top: $padding-full;
                 display: flex;
                 gap: 1em;
                 justify-content: flex-end;
-                padding: 0 1em;
+                padding: $padding-half $padding-full;
             }
         }
 
@@ -80,28 +87,54 @@
 
 
             .replay-wrap {
+
+
+
                 position: relative;
                 display: flex;
                 flex-flow: column;
-                gap: 0.4em;
-                padding: 0.2em 1em;
+                gap: $padding-half;
+                padding: $padding-full;
 
                 .moves-wrap {
                     height: 200px;
+
+                    border-radius: 12px;
+                    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+
                 }
 
                 .replay-tools {
+                    margin-top: $padding-half;
                     display: flex;
                     gap: 1em;
                     align-self: flex-end;
                 }
+
+                .replay {
+                    padding: $padding-full;
+                    .no-line-to-save {
+                       color: theme.$light-grey;
+                       padding: $padding-full;
+                    }
+                }
+            }
+
+            .no-line {
+                margin-left: $padding-full;
+            }
+
+            .line-info-wrap {
+                padding: $padding-full;
+                background: theme.$dark-purple;
+                border-radius: 8px 8px 0 0;
             }
 
             .line-info {
 
                 display: flex;
                 flex-flow: column;
-                margin-left: 1em;
+                gap: $padding-full;
 
                 .playlist-info {
                         display: flex;
@@ -120,14 +153,14 @@
             }
 
             .error-info {
-                padding: 1em;
+                padding: $padding-full;
             }
 
             .tools {
-                padding: 0 1em;
+                justify-self: center;
+                padding: 0 $padding-full;
                 display: flex;
                 align-items: center;
-                justify-content: space-between;
                 gap: 1em;
 
                 input {
@@ -169,6 +202,8 @@
                 display: flex;
 
                 .tab {
+                    padding: $padding-half;
+                    font-size: 1.1em;
                     flex: 1;
                     text-align: center;
                     cursor: pointer;
@@ -176,7 +211,7 @@
                     color: theme.$light-grey;
                     &.active {
                         color: theme.$white;
-                        border-bottom: 2px solid theme.$blue;
+                        border-bottom: 8px solid theme.$blue;
                         font-weight: bold;
                     }
                     &:hover {
@@ -190,6 +225,12 @@
 
             }
 
+            .room {
+                height: 0.1em;
+                border-top: 1px solid theme.$light-peach;
+                background: theme.$light-peach;
+            }
+
             .lists {
                 overflow-y: scroll;
                 flex: 0 0 30%;
@@ -200,9 +241,11 @@
                         min-height: 0;
                         min-width: 0;
 
+                        gap: 0.3em;
+                        padding: $padding-full;
 
                         .item-new {
-                            padding: 1em;
+                            padding: $padding-full;
                             cursor: pointer;
 
                             .icon {
@@ -230,12 +273,23 @@
                                         }
                                 }
                         }
+
+                        .item-new, .item {
+                            border-radius: 12px;
+                            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+
+                            &.active {
+                                box-shadow: 0px 0 12px rgba(255, 64, 100, 0.4);
+                            }
+                        }
                 
                         .item {
 
+
                             display: flex;
                             flex-flow: column;
-                            padding: 1em;
+                            padding: $padding-full;
+
                             cursor: pointer;
                                 width: 100%;
                                 overflow: hidden;
@@ -279,7 +333,7 @@
                 border-top: 2px solid theme.$light-peach;
 
                 .title {
-                    padding: 0.2em 0.5em;
+                    padding: $padding-half $padding-full;
                 }
             }
 
@@ -291,6 +345,7 @@
                 .a-line {
                     display: flex;
                     align-items: center;
+                    padding: $padding-half;
 
                     .name {
                         flex: 1;
@@ -298,16 +353,16 @@
 
                     .more {
                         button, i {
-                        font-size: 1em;
+                          font-size: 0.9em;
                         }
                     }
 
                     &:hover {
-                        background: theme.$blue;
+                        background: theme.$pink;
                     }
 
                     &.active {
-                        background: theme.$dark-purple;
+                        background: theme.$blue;
                         color: theme.$white;
                     }
                 }
@@ -323,8 +378,8 @@
                     margin-right: 0.5em;
                     cursor: pointer;
 
-                    button, i {
-                    font-size: 1.1em;
+                    button {
+                    font-size: 1.02em;
                     }
 
                     button {
@@ -337,7 +392,7 @@
                             }
 
                             &.active {
-                                color: theme.$pink;
+                                color: theme.$dark-purple;
                             }
                         }
                 }
@@ -354,7 +409,7 @@
                 color: theme.$black;
                 ul {
                     li {
-                        padding: 0.5em;
+                        padding: $padding-half;
                         cursor: pointer;
                         margin-left: 0.2em;
 
@@ -425,14 +480,14 @@
                     }
 
                     .sb-modal-body {
-                        padding: 0.5em;
+                        padding: $padding-half;
                         display: flex;
                         flex-flow: column;
                         gap: 1em;
                     }
 
                     .sb-modal-footer {
-                        padding: 0.5em;
+                        padding: $padding-half;
                         display: flex;
                         justify-content: flex-end;
                         gap: 0.5em;
@@ -447,12 +502,12 @@
                                 color: theme.$white;
                                 flex: 1;
                             }
-                        padding: 0.2em 0.5em;
+                        padding: $padding-half $padding-full;
 
                         border-bottom: 1px solid theme.$light-peach;
 
                         .close {
-                            padding: 0.3em;
+                            padding: $padding-half;
                             cursor: pointer;
                             border-radius: 50%;
                             display: flex;
