@@ -308,6 +308,9 @@ const PlaylistListItem = (props: { item: OpeningsPlaylist }) => {
     return (<>
         <li ref={$} onClick={() => select_playlist(props.item._id)} class='item' classList={{active: is_selected()}}>
             <div class='title'>{item().name}</div>
+            <Show when={item().author}>{author =>
+                <div class='author'>by <span>{author()}</span></div>
+            }</Show>
             <div class='likes'>{item().nb_likes} <Icon icon={Icons.HeartFilled}></Icon></div>
             <div class='nb'>{item().nb_lines} lines</div>
         </li>

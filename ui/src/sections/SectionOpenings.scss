@@ -24,7 +24,7 @@
                 grid-template-areas: 'build explore'
                     'playlist .';
 
-                grid-template-columns: minmax(auto, 80vh) 1fr;
+                grid-template-columns: minmax(auto, 70vh) 1fr;
 
                 grid-template-rows: repeat(2, 90vh);
         }

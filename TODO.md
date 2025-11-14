@@ -18,6 +18,7 @@
 
 5. Beta Test Prep
    - [ ] Add Initial Content
+   - [ ] Pagination
    - [ ] Mobile Ready
    - [ ] Page Insights
 

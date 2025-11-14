@@ -234,6 +234,7 @@ function playlist_view_json(playlist) {
     return {
         _id: playlist.id,
         name: playlist.name,
+        author: playlist.author,
         nb_lines: playlist.nb_lines,
         nb_likes: playlist.nb_likes,
         created_at: playlist.created_at,
@@ -453,20 +454,26 @@ app.get("/playlist/mine/recent", async (req, res) => {
 });
 
 app.get("/playlist/global", async (req, res) => {
+    const userId = req.session.userId
     let page = parseInt(req.query.page) || 1
     const pageSize = 20
     const offset = (page - 1) * pageSize
     const { count } = await db.prepare(`SELECT COUNT(*) as count FROM playlists`).get()
 
     const playlists = await db.prepare(`
-        SELECT * FROM playlists
+        SELECT p.*, 
+        (SELECT COUNT(*) FROM lines WHERE playlist_id = p.id) as nb_lines,
+        (SELECT COUNT(*) FROM playlist_likes WHERE playlist_id = p.id AND yes = 1) as nb_likes,
+        (SELECT yes FROM playlist_likes where playlist_id = p.id AND user_id = ?) as have_liked,
+        users.lichess_username as author
+        FROM playlists p
         INNER JOIN users
         ON users.lichess_username IS NOT null
-        AND users.id = playlists.user_id
+        AND users.id = p.user_id
         AND name <> 'Working Playlist'
         ORDER BY created_at DESC
         LIMIT ? OFFSET ?
-        `).all([pageSize, offset]);
+        `).all([userId, pageSize, offset]);
     res.json(paginated(page, pageSize, count, playlists.map(playlist_view_json)));
 });
 
@@ -541,11 +548,16 @@ app.get("/playlist/selected/:id", async (req, res) => {
         return
     }
 
+
+    let author = await db.prepare(`SELECT lichess_username FROM users WHERE id = ?`).get([playlist.user_id])
+    playlist.author = author?.lichess_username
+
     const lines = await db.prepare(`SELECT 
         l.*,
         (SELECT COUNT(*) FROM line_likes WHERE line_id = l.id AND yes = 1) as nb_likes 
         FROM lines l
         WHERE playlist_id=?`).all([playlist_id]);
+
     res.json({ playlist: playlist_view_json(playlist), lines: lines.map(line_view_json) });
 });
 
