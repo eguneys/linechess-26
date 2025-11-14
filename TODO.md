@@ -7,6 +7,9 @@
    - [ ] Cosmetics – Global
    - [ ] Cosmetics – Playlist
    - [ ] Cosmetics – Search
+   - [ ] Cosmetics - Pagination
+   - [ ] Cosmetics - Filter Tags
+   - [ ] Cosmetics - Tag Newly Created
 
 3. Resilience
    - [ ] Error Handling
@@ -18,7 +21,6 @@
 
 5. Beta Test Prep
    - [ ] Add Initial Content
-   - [ ] Pagination
    - [ ] Mobile Ready
    - [ ] Page Insights
 

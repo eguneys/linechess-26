@@ -178,6 +178,45 @@ export function create_openings_store(store: OpeningsStore2): OpeningsStore {
         }
     }
 
+    function update_fetchs_all_create_line(_: OpeningsPlaylistId, is_delete: boolean) {
+
+        if (state.global_playlists) {
+            set_state('global_playlists', 'list', l => l._id === _, 'nb_lines', _ => is_delete ? _ - 1 : _ + 1)
+        }
+        if (state.global_recent_playlists) {
+            set_state('global_recent_playlists', 'list', l => l._id === _, 'nb_lines', _ => is_delete ? _ -1 : _ + 1)
+        }
+        if (state.mine_playlists) {
+            set_state('mine_playlists', 'list', l => l._id === _, 'nb_lines', _ => is_delete ? _ -1 : _ + 1)
+        }
+        if (state.mine_recent_playlists) {
+            set_state('mine_recent_playlists', 'list', l => l._id === _, 'nb_lines', _ => is_delete ? _ -1 : _ + 1)
+        }
+        if (state.liked_playlists) {
+            set_state('liked_playlists', 'list', l => l._id === _, 'nb_lines', _ => is_delete ? _ -1 : _ + 1)
+        }
+    }
+
+
+    function update_fetchs_all_likes(_: OpeningsPlaylistId, yes: boolean) {
+
+        if (state.global_playlists) {
+            set_state('global_playlists', 'list', l => l._id === _, 'nb_likes', _ => yes ? _ + 1 : _ - 1)
+        }
+        if (state.global_recent_playlists) {
+            set_state('global_recent_playlists', 'list', l => l._id === _, 'nb_likes', _ => yes ? _ + 1 : _ - 1)
+        }
+        if (state.mine_playlists) {
+            set_state('mine_playlists', 'list', l => l._id === _, 'nb_likes', _ => yes ? _ + 1 : _ - 1)
+        }
+        if (state.mine_recent_playlists) {
+            set_state('mine_recent_playlists', 'list', l => l._id === _, 'nb_likes', _ => yes ? _ + 1 : _ - 1)
+        }
+        if (state.liked_playlists) {
+            set_state('liked_playlists', 'list', l => l._id === _, 'nb_likes', _ => yes ? _ + 1 : _ - 1)
+        }
+    }
+
     const [fetch_profile, set_fetch_profile] = createSignal(undefined, { equals: false })
     const get_profile = createAsync(() => {
         fetch_profile()
@@ -271,18 +310,27 @@ export function create_openings_store(store: OpeningsStore2): OpeningsStore {
                     }
 
                     set_selected_line_id(_._id)
+
+                    update_fetchs_all_create_line(_._playlist_id, false)
                 })
             })
 
             return res
         },
         delete_line: async function (id: OpeningsLineId): Promise<Result<void>> {
+
+            let playlist_id = state.playlist?.lines.find(_ => _._id === id)?._playlist_id
+
             let res = await $agent.delete_line(id)
 
             if (res.isErr) {
                 return res
             }
 
+            if (playlist_id) {
+
+                update_fetchs_all_create_line(playlist_id, true)
+            }
 
             if (state.playlist) {
                 set_state('playlist', 'lines', state.playlist.lines.filter(_ => _._id !== id))
@@ -379,6 +427,7 @@ export function create_openings_store(store: OpeningsStore2): OpeningsStore {
             if (state.playlist && state.playlist.playlist._id === id) {
                 set_state('playlist', 'playlist', 'nb_likes', _ => yes ? _ + 1 : _ - 1)
             }
+            update_fetchs_all_likes(id, yes)
 
             return res.map(() => {})
         },

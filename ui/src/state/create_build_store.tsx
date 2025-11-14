@@ -37,10 +37,10 @@ export const create_build_store = (store: OpeningsStore2): OpeningsBuildStore =>
 
     let [ops] = store.openings
 
-    let [orientation, set_orientation] = createSignal<Color>('white')
+    let [orientation, set_orientation] = createWritableMemo(() => ops.selected_line?.orientation)
 
-    let [cursor, set_cursor] = createSignal(0)
     const [steps, set_steps] = createWritableMemo(() => steps_make_from_UCIs(ops.selected_line?.moves.split(' ') ?? []))
+    let [cursor, set_cursor] = createWritableMemo(() => steps().length -1)
 
     const step = createMemo<Step | undefined>(() => steps()[cursor()])
     const fen = createMemo(() => step()?.fen ?? INITIAL_FEN)
