@@ -2,7 +2,13 @@ import { Result } from "@badrap/result";
 import type { Color, OpeningsLine, OpeningsPlaylist } from "./types"
 import type { Paged, SelectedPlaylistModel } from "./create_openings_store";
 
+export type UserProfile = {
+    lichess_username?: string
+}
+
 export type OpeningsAgent = {
+    logout(): Promise<void>;
+    get_profile(): Promise<Result<UserProfile>>
     get_searched_playlists(): Promise<Result<Paged<OpeningsPlaylist>>>;
     get_global_recent_playlists(): Promise<Result<OpeningsPlaylist[]>>;
     get_mine_recent_playlists(): Promise<Result<OpeningsPlaylist[]>>;
@@ -27,7 +33,7 @@ export type OpeningsAgent = {
     set_ordered_line_slots(id: string, lines: string[]): Promise<Result<void>>;
 }
 
-const API_ENDPOINT = import.meta.env.DEV ? 'http://localhost:3300' : `https://api.linechess.com:3300`
+export const API_ENDPOINT = import.meta.env.DEV ? 'http://localhost:3300' : `https://api.linechess.com:3300`
 const $ = (path: string, opts?: RequestInit) => fetch(API_ENDPOINT + path, { ...opts, credentials: 'include' }).then(_ => _.json())
 
 async function $post(path: string, body: any = {}) {
@@ -39,7 +45,7 @@ async function $post(path: string, body: any = {}) {
     return res
 }
 
-const $init_session = $('/session/init')
+let $init_session = $('/session/init')
 const $$ = (path: string, opts?: RequestInit) => $init_session.then(() => $(path, opts))
 const $$post = (path: string, body: any = {}) => $init_session.then(() => $post(path, body))
 
@@ -65,7 +71,13 @@ const wrap_result = (_: any) => {
 export function create_openings_agent(): OpeningsAgent {
 
     return {
-
+        async logout() {
+            await $$('/logout')
+            $init_session = $('/session/init')
+        },
+        get_profile() {
+            return $init_session.then(wrap_result)
+        },
         undo: function(): Promise<void> {
             return $$post('/undo');
         },

@@ -1,10 +1,13 @@
 import express from "express";
 import sqlite3 from "better-sqlite3";
-import session from 'express-session'
+import session, { Session } from 'express-session'
 import SessionStore from 'better-sqlite3-session-store'
 import bodyParser from "body-parser";
 import cors from "cors";
 import rateLimit from 'express-rate-limit';
+
+import passport from 'passport'
+import LichessStrategy from 'passport-lichess'
 
 const SECRET = process.env.SECRET_SALT || 's3cr3t-s@lt'
 
@@ -29,6 +32,7 @@ app.use('/submit', limiter);
 
 const SqliteStore = SessionStore(session)
 const session_db = new sqlite3('db/sessions.db')
+session_db.pragma('journal_mode = WAL')
 
 app.use(session({
     store: new SqliteStore({
@@ -47,13 +51,18 @@ app.use(session({
 // --- Session Authorization --
 
 app.get("/session/init", async (req, res) => {
+
     if (!req.session.userId) {
         const id = uuidv4_user();
         await db.prepare(`INSERT INTO users (id) VALUES (?)`).run([id]);
         req.session.userId = id;
         console.log("🆕 Created guest user:", id);
     }
-    res.json({ ok: true });
+
+
+    let user = await db.prepare(`SELECT * from users WHERE id = ?`).get(req.session.userId)
+
+    res.json(ok(user_view_json(user)));
 });
 
 
@@ -67,6 +76,22 @@ function requireSession(req, res, next) {
 app.use(requireSession)
 
 
+async function Session_DB_Upgrade_User_To_Lichess(req, lichess_access_token, lichess_username) {
+
+    let existing_user = await db.prepare(`SELECT id from users WHERE lichess_username = ?`).get([lichess_username])
+
+    if (existing_user !== undefined) {
+
+        await db.prepare(`UPDATE users SET lichess_access_token=?, lichess_username=? WHERE id=?`)
+            .run([lichess_access_token, lichess_username, existing_user.id]);
+
+        req.session.userId = existing_user.id
+    } else {
+
+        await db.prepare(`UPDATE users SET lichess_access_token=?, lichess_username=? WHERE id=?`)
+            .run([lichess_access_token, lichess_username, req.session.userId]);
+    }
+}
 /*
 app.post("/upgrade-account", async (req, res) => {
     const { username, password } = req.body;
@@ -76,20 +101,61 @@ app.post("/upgrade-account", async (req, res) => {
 */
 
 
+app.get("/logout", async (req, res) => {
+    req.session.userId = undefined
+
+    res.send(ok(null))
+})
+
+import config from './config.json' with { type: 'json' }
+
+// -- Passport Lichess --
+
+const domain = config.domain
+
+passport.use(new LichessStrategy({
+    clientID: gen_id(),
+    callbackURL: `${domain}/auth/lichess/callback`,
+    passReqToCallback: true
+}, async function (req, accessToken, refreshToken, profile, cb) {
+
+    let user = await Session_DB_Upgrade_User_To_Lichess(req, accessToken, profile.username)
+
+    cb(null, user)
+}))
+
+app.get('/auth/lichess', passport.authenticate('lichess'))
+
+app.get('/auth/lichess/callback', passport.authenticate('lichess', {
+    successRedirect: config.spa_domain,
+    failureRedirect: config.spa_domain 
+}))
+
+
+app.post('/logout', function(req, res, next) {
+    console.log(req.user)
+    req.logout(function(err) {
+        if (err) { return next(err) }
+        res.send(ok(null))
+    })
+})
+
+
+
 let db;
 
 // --- Database setup ---
 async function initDb() {
 
-    db = sqlite3("db/openings.db");
+    db = sqlite3("db/openings.db")
 
     db.pragma('journal_mode = WAL')
 
     await db.exec(`
         CREATE TABLE IF NOT EXISTS users (
             id TEXT PRIMARY KEY,
-            lichess_id TEXT
-            lichess_token TEXT
+            lichess_username TEXT,
+            lichess_access_token TEXT
         );
     `);
 
@@ -188,6 +254,12 @@ function line_view_json(line) {
     }
 }
 
+function user_view_json(user) {
+    return {
+        lichess_username: user.lichess_username
+    }
+}
+
 function paginated(page, pageSize, count, list) {
     return {
         max_per_page: pageSize,
@@ -276,16 +348,6 @@ app.post("/line/delete", async (req, res) => {
     await db.prepare(`DELETE FROM lines WHERE id=?`).run([id]);
     res.json(ok(null));
 });
-
-/*
-app.post("/line/edit", async (req, res) => {
-    const { id, name, moves, orientation } = req.body;
-
-    await db.prepare(`UPDATE lines SET name=?, moves=?, orientation=? WHERE id=?`).run([name, moves, orientation, id]);
-    const line = await db.prepare(`SELECT * FROM lines WHERE id=?`).get([id]);
-    res.json(ok(line_view_json(line)));
-});
-*/
 
 app.post("/line/edit", async (req, res) => {
     const { id, name, moves, orientation } = req.body;
@@ -399,9 +461,9 @@ app.get("/playlist/global", async (req, res) => {
     const playlists = await db.prepare(`
         SELECT * FROM playlists
         INNER JOIN users
-        ON users.lichess_id IS NOT null
+        ON users.lichess_username IS NOT null
         AND users.id = playlists.user_id
-        AND name <> 'Working Lines'
+        AND name <> 'Working Playlist'
         ORDER BY created_at DESC
         LIMIT ? OFFSET ?
         `).all([pageSize, offset]);
@@ -499,13 +561,13 @@ app.use(defaultErrorHandler)
 
 
 // --- Start ---
-const PORT = process.env.PORT || 3300;
+const PORT = process.env.PORT || config.port || 3300;
 initDb().then(() => {
     app.listen(PORT, (err) => {
         if (err) {
             console.error(err)
         } else {
-            console.log(`✅ Backend running on http://localhost:${PORT}`)
+            console.log(`✅ Backend running on ${config.domain}:${PORT}`)
         }
     });
 });

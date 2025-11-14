@@ -1,7 +1,7 @@
 import { Result } from "@badrap/result"
 import type { Color, OpeningsLine, OpeningsLineId, OpeningsPlaylist, OpeningsPlaylistId, UCIMoves } from "./types"
 import { createStore } from "solid-js/store"
-import { create_openings_agent } from './create_agent'
+import { create_openings_agent, type UserProfile } from './create_agent'
 import { createAsync } from "@solidjs/router"
 import { batch, createSignal } from "solid-js"
 import { makePersisted } from "@solid-primitives/storage"
@@ -26,6 +26,7 @@ export type UndoActionModel = {
 }
 
 export type OpeningsState = {
+    profile: UserProfile | undefined,
     selected_line: OpeningsLine | undefined
     playlist: SelectedPlaylistModel | undefined
     mine_playlists: { list: OpeningsPlaylist[] } | undefined
@@ -41,6 +42,7 @@ export type SetPageNavigate = -1 | 0 | 1
 export type SearchTerm = string
 
 export type OpeningsActions = {
+    profile_logout(): void
     select_line(id: OpeningsLineId): void
     select_playlist(id: OpeningsPlaylistId): void
     create_line(name: string, moves: UCIMoves, orientation: Color): Promise<Result<OpeningsLine>>
@@ -176,8 +178,16 @@ export function create_openings_store(): OpeningsStore {
         }
     }
 
+    const [fetch_profile, set_fetch_profile] = createSignal(undefined, { equals: false })
+    const get_profile = createAsync(() => {
+        fetch_profile()
+        return $agent.get_profile()
+    })
 
     let [state, set_state] = createStore<OpeningsState>({
+        get profile() {
+            return get_profile()?.unwrap()
+        },
         get selected_line() {
             let id = selected_line_id()
             return get_selected_playlist_model()?.unwrap()
@@ -211,6 +221,21 @@ export function create_openings_store(): OpeningsStore {
     })
 
     let actions: OpeningsActions = {
+        async profile_logout() {
+            await $agent.logout()
+
+            set_fetch_profile()
+            set_selected_playlist_id(undefined)
+
+            set_fetch_mine_playlists(true)
+            set_fetch_liked_playlists(true)
+            set_fetch_global_playlists(true)
+            set_fetch_mine_recent_playlists(true)
+            set_fetch_global_recent_playlists(true)
+            set_fetch_searched_lines(false)
+            set_fetch_searched_playlists(false)
+
+        },
         select_line(id: OpeningsLineId) {
             set_selected_line_id(id)
             let line = state.selected_line

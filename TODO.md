@@ -1,0 +1,23 @@
+- [ ] Admin Panel
+- [ ] Search Playlists
+- [ ] Cosmetics
+  - [ ] Global View
+  - [ ] Playlist View
+  - [ ] Search View
+- [ ] Security
+  - [ ] Rate Limit
+- [ ] Test Beta
+ - [ ] Add Content 
+ - [ ] Mobile Ready
+- [ ] Resilient
+ - [ ] Error Handling
+ - [ ] Loading Indicators
+- [ ] Challenges Roadmap
+- [ ] Feedback
+- [ ] Publish
+- [ ] Legal
+ - [ ] Terms of Service
+ - [ ] Privacy Policy
+
+- [ ] Profile Dashboard
+- [ ] ~ Add to Playlist ~
