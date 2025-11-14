@@ -5,7 +5,7 @@ import { create_openings_agent, type UserProfile } from './create_agent'
 import { createAsync } from "@solidjs/router"
 import { batch, createSignal } from "solid-js"
 import { makePersisted } from "@solid-primitives/storage"
-import { useBuildStore } from "./OpeningsBuildState"
+import type { OpeningsStore2 } from "./OpeningsStore2"
 
 export interface Paged<Content> {
     max_per_page: number
@@ -65,9 +65,8 @@ export type OpeningsActions = {
 
 export type OpeningsStore = [OpeningsState, OpeningsActions]
 
-export function create_openings_store(): OpeningsStore {
+export function create_openings_store(store: OpeningsStore2): OpeningsStore {
 
-    const [,{ set_orientation, import_UCIs }] = useBuildStore()
 
     let $agent = create_openings_agent()
 
@@ -108,7 +107,8 @@ export function create_openings_store(): OpeningsStore {
         }
 
         res.map(_ => {
-            set_selected_line_id(_.lines[0]?._id)
+            let line = _.lines.find(l => l._id === selected_line_id()) ?? _.lines[0]
+            set_selected_line_id(line?._id)
         })
 
         return res
@@ -237,6 +237,8 @@ export function create_openings_store(): OpeningsStore {
 
         },
         select_line(id: OpeningsLineId) {
+
+            const [, { set_orientation, import_UCIs }] = store.build
             set_selected_line_id(id)
             let line = state.selected_line
 

@@ -13,12 +13,11 @@ import Heart from '../components/Heart'
 import ActionButton, { Actions } from '../components/ActionButton'
 import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from '../components/ModalBlocks'
 import TextInputHighlight from '../components/TextInputHighlight'
-import { useStore } from '../state/OpeningsState'
 import type { OpeningsLine, OpeningsPlaylist } from '../state/types'
 import { Dynamic } from 'solid-js/web'
-import { useBuildStore } from '../state/OpeningsBuildState'
 import ErrorLine from '../components/ErrorLine'
 import type { SelectedPlaylistModel } from '../state/create_openings_store'
+import { useBuildStore, useOpeningsStore } from '../state/OpeningsStore2'
 
 
 
@@ -89,7 +88,7 @@ export const SectionOpenings = () => {
         }, 2000)
     }
 
-    const [state,{create_line}] = useStore()
+    const [state,{create_line}] = useOpeningsStore()
     const on_save_line = async () => {
 
         if (line_name === undefined || line_name.length < 3) {
@@ -184,7 +183,7 @@ type PlaylistFilter = 'mine' | 'liked' | 'global'
 
 const OpeningsPlaylistView = () => {
 
-    let [state] = useStore()
+    let [state] = useOpeningsStore()
     const selected_playlist = createMemo(() => state.playlist)
 
 
@@ -235,7 +234,7 @@ const OpeningsPlaylistView = () => {
 
 const OpeningPlaylistsGlobalView = () => {
 
-    let [state] = useStore()
+    let [state] = useOpeningsStore()
 
     const playlists = createMemo(() => state.global_playlists?.list ?? [])
 
@@ -252,7 +251,7 @@ const OpeningPlaylistsGlobalView = () => {
 
 const OpeningPlaylistsLikedView = () => {
 
-    let [state] = useStore()
+    let [state] = useOpeningsStore()
 
     const playlists = createMemo(() => state.liked_playlists?.list)
 
@@ -267,7 +266,7 @@ const OpeningPlaylistsLikedView = () => {
 
 const OpeningPlaylistsMineView = () => {
 
-    let [state] = useStore()
+    let [state] = useOpeningsStore()
 
     const playlists = createMemo(() => state.mine_playlists?.list)
 
@@ -294,7 +293,7 @@ const OpeningPlaylistsMineView = () => {
 }
 
 const PlaylistListItem = (props: { item: OpeningsPlaylist }) => {
-    const [state,{ select_playlist}] = useStore()
+    const [state,{ select_playlist}] = useOpeningsStore()
 
     const item = createMemo(() => props.item)
 
@@ -317,7 +316,7 @@ const PlaylistListItem = (props: { item: OpeningsPlaylist }) => {
 
 const OpeningLines = (props: {lines: OpeningsLine[]}) => {
 
-    let [,{ set_ordered_line_slots }] = useStore()
+    let [,{ set_ordered_line_slots }] = useOpeningsStore()
     const lines = createMemo(() => props.lines.slice(0).sort((a, b) => a.slot - b.slot))
 
     return (<>
@@ -336,7 +335,7 @@ const OpeningLines = (props: {lines: OpeningsLine[]}) => {
 
 const PlaylistInfo = (props: { playlist: OpeningsPlaylist }) => {
 
-    const [, { like_playlist, delete_playlist }] = useStore()
+    const [, { like_playlist, delete_playlist }] = useOpeningsStore()
     const [is_edit_playlist_item_modal_open, set_is_edit_playlist_item_modal_open] = createSignal(false, { equals: false })
 
     return (<>
@@ -374,7 +373,7 @@ const PlaylistInfo = (props: { playlist: OpeningsPlaylist }) => {
 
 const OpeningPlayListItem = (item: OpeningsLine) => {
 
-    const [state,{select_line, delete_line}] = useStore()
+    const [state,{select_line, delete_line}] = useOpeningsStore()
 
     const [is_edit_line_modal_open, set_is_edit_line_modal_open] = createSignal(false, { equals: false })
 
@@ -433,7 +432,7 @@ const OpeningPlayListItemDragging = (item: OpeningsLine) => {
 const EditLineModalContent = (props: { line: OpeningsLine, open: () => boolean, toggle: (open?: boolean) => void }) => {
 
     let [error, set_error] = createSignal<string | undefined>(undefined)
-    const [, {edit_line }] = useStore()
+    const [, {edit_line }] = useOpeningsStore()
 
     let [submit_value, set_submit_value] = createSignal('')
 
@@ -497,7 +496,7 @@ const EditLineModalContent = (props: { line: OpeningsLine, open: () => boolean, 
 const EditPlaylistItemModalContent = (props: { playlist: OpeningsPlaylist, open: () => boolean, toggle: (open?: boolean) => void }) => {
 
     let [error, set_error] = createSignal<string | undefined>(undefined)
-    const [, {edit_playlist }] = useStore()
+    const [, {edit_playlist }] = useOpeningsStore()
 
     let [submit_value, set_submit_value] = createSignal('')
 
@@ -558,7 +557,7 @@ const CreateNewPlaylistModalContent = (props: { open: () => boolean, toggle: (op
 
     let [error, set_error] = createSignal<string | undefined>(undefined)
     let [waiting, set_waiting] = createSignal(false)
-    let [, { create_playlist }] = useStore()
+    let [, { create_playlist }] = useOpeningsStore()
 
     let [submit_value, set_submit_value] = createSignal('')
 

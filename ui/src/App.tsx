@@ -4,8 +4,7 @@ import { Router, Route, A } from '@solidjs/router'
 
 import { SectionOpenings } from './sections/SectionOpenings'
 import { SectionChallenges } from './sections/SectionChallenges'
-import { OpeningStoreProvider, useStore } from './state/OpeningsState'
-import { OpeningBuildStoreProvider } from './state/OpeningsBuildState'
+import { OpeningStoreProvider, useOpeningsStore } from './state/OpeningsStore2'
 import { API_ENDPOINT } from './state/create_agent'
 
 const MainLegal = lazy(() => import('./misc/MainLegal'))
@@ -31,11 +30,9 @@ function Layout(props: { children?: JSX.Element }) {
 
   return (<>
     <div class='main-wrap'>
-      <OpeningBuildStoreProvider>
-        <OpeningStoreProvider>
-          {props.children}
-        </OpeningStoreProvider>
-      </OpeningBuildStoreProvider>
+      <OpeningStoreProvider>
+        {props.children}
+      </OpeningStoreProvider>
     </div>
 
   </>)
@@ -45,7 +42,7 @@ export default App
 
 function MainHome() {
 
-  const [state, { profile_logout }] = useStore()
+  const [state, { profile_logout }] = useOpeningsStore()
 
   return (<>
     <main class='main'>

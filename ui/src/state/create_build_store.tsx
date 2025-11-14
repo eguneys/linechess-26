@@ -1,8 +1,10 @@
-import { batch, createContext, createMemo, createSignal, type JSX, useContext } from "solid-js"
-import type { Color, FEN, SAN, UCI } from "./types"
+import { opposite, type Color } from "chessops"
+import type { FEN, SAN, UCI } from "./types"
+import { batch, createMemo, createSignal } from "solid-js"
+import { createWritableMemo } from "@solid-primitives/memo"
 import { fen_turn, steps_add_uci, steps_export_PGN, steps_export_UCI, steps_make_from_UCIs, type Step } from "../components/steps"
 import { INITIAL_FEN } from "chessops/fen"
-import { opposite } from "chessops"
+import type { OpeningsStore2 } from "./OpeningsStore2"
 
 type OpeningsBuildState = {
     orientation: Color
@@ -29,14 +31,17 @@ type OpeningsBuildActions = {
     import_UCIs(ucis: string): void
 }
 
-type OpeningsBuildStore = [OpeningsBuildState, OpeningsBuildActions]
+export type OpeningsBuildStore = [OpeningsBuildState, OpeningsBuildActions]
 
-const OpeningsBuildStore = (): OpeningsBuildStore => {
+export const create_build_store = (store: OpeningsStore2): OpeningsBuildStore => {
+
+    let [ops] = store.openings
 
     let [orientation, set_orientation] = createSignal<Color>('white')
 
     let [cursor, set_cursor] = createSignal(0)
-    const [steps, set_steps] = createSignal<Step[]>([])
+    const [steps, set_steps] = createWritableMemo(() => steps_make_from_UCIs(ops.selected_line?.moves.split(' ') ?? []))
+
     const step = createMemo<Step | undefined>(() => steps()[cursor()])
     const fen = createMemo(() => step()?.fen ?? INITIAL_FEN)
     const turn_color = createMemo(() => fen_turn(fen()))
@@ -127,22 +132,4 @@ const OpeningsBuildStore = (): OpeningsBuildStore => {
     }
 
     return [state, actions]
-}
-
-const OpeningsBuildStoreContext = createContext<OpeningsBuildStore>()
-
-export function useBuildStore() {
-    return useContext(OpeningsBuildStoreContext)!
-}
-
-export function OpeningBuildStoreProvider(props: { children: JSX.Element}) {
-
-    const store: OpeningsBuildStore = OpeningsBuildStore()
-
-
-    return (<>
-    <OpeningsBuildStoreContext.Provider value={store}>
-        {props.children}
-    </OpeningsBuildStoreContext.Provider>
-    </>)
 }

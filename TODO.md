@@ -19,6 +19,7 @@
 5. Beta Test Prep
    - [ ] Add Initial Content
    - [ ] Mobile Ready
+   - [ ] Page Insights
 
 6. Challenges Roadmap
    - [ ] Define challenge types and mechanics
