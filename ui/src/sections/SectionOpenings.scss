@@ -11,6 +11,7 @@
         position: relative;
         display: grid;
         overflow: hidden;
+        gap: $padding-half;
 
         @include media.mq-is-col1 {
             grid-template-areas: 'build'

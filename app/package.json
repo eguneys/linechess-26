@@ -19,6 +19,7 @@
     "express": "^5.1.0",
     "express-rate-limit": "^8.2.1",
     "express-session": "^1.18.2",
+    "lichess-node": "^0.0.7",
     "passport": "^0.7.0",
     "passport-lichess": "^2.0.0"
   }
