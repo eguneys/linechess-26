@@ -1,6 +1,6 @@
 import { opposite, type Color } from "chessops"
 import type { FEN, SAN, UCI } from "./types"
-import { batch, createMemo, createSignal } from "solid-js"
+import { batch, createMemo } from "solid-js"
 import { createWritableMemo } from "@solid-primitives/memo"
 import { fen_turn, steps_add_uci, steps_export_PGN, steps_export_UCI, steps_make_from_UCIs, type Step } from "../components/steps"
 import { INITIAL_FEN } from "chessops/fen"
@@ -37,7 +37,8 @@ export const create_build_store = (store: OpeningsStore2): OpeningsBuildStore =>
 
     let [ops] = store.openings
 
-    let [orientation, set_orientation] = createWritableMemo(() => ops.selected_line?.orientation)
+    let [orientation, set_orientation] = createWritableMemo(() => ops.selected_line?.orientation ?? 'white')
+
 
     const [steps, set_steps] = createWritableMemo(() => steps_make_from_UCIs(ops.selected_line?.moves.split(' ') ?? []))
     let [cursor, set_cursor] = createWritableMemo(() => steps().length -1)

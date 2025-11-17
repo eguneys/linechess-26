@@ -1,11 +1,10 @@
-import { lazy, Show, type JSX } from 'solid-js'
+import { lazy, Show, Suspense, type JSX } from 'solid-js'
 import './App.scss'
-import { Router, Route, A } from '@solidjs/router'
+import { Router, Route, A }  from '@solidjs/router'
 
 import { SectionOpenings } from './sections/SectionOpenings'
 import { SectionChallenges } from './sections/SectionChallenges'
-import { OpeningStoreProvider, useOpeningsStore } from './state/OpeningsStore2'
-import { API_ENDPOINT } from './state/create_agent'
+import { OpeningStoreProvider, useLichessStore } from './state/OpeningsStore2'
 
 const MainLegal = lazy(() => import('./misc/MainLegal'))
 const Main404 = lazy(() => import('./misc/Main404'))
@@ -42,7 +41,7 @@ export default App
 
 function MainHome() {
 
-  const [state, { profile_logout }] = useOpeningsStore()
+  const [state, { login, logout }] = useLichessStore()
 
   return (<>
     <main class='main'>
@@ -53,14 +52,16 @@ function MainHome() {
       <p> Free, Open Source, No Ads, No Trackers.</p>
       <p>For the 💔 of Chess</p>
 
-      <Show when={state.profile?.lichess_username} fallback={
-        <p><small><A href={`${API_ENDPOINT}/auth/lichess`}>Login with Lichess</A> to make your data publicly available.</small></p>
+            <Suspense fallback={'...'}>
+      <Show when={state.username} fallback={
+        <p><small><a onClick={login}>Login with Lichess</a> to make your data publicly available.</small></p>
       }>{username =>
           <>
-            <p>Welcome from Lichess, {username()}!  <small><a onClick={profile_logout}>Logout.</a></small></p>
+              <p>Welcome from Lichess, {username()}!  <small><a onClick={logout}>Logout.</a></small></p>
           </>
         }
       </Show>
+            </Suspense>
 
       <section class='section-openings'>
         <h2>Openings</h2>

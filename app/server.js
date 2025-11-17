@@ -92,16 +92,17 @@ async function Session_DB_Upgrade_User_To_Lichess(req, lichess_access_token, lic
             .run([lichess_access_token, lichess_username, req.session.userId]);
     }
 }
-/*
+
 app.post("/upgrade-account", async (req, res) => {
-    const { username, password } = req.body;
-    await db.run(`UPDATE users SET username=?, password=? WHERE id=?`, [username, password, req.session.userId]);
+    const { lichess_username } = req.body;
+
+    let user = await Session_DB_Upgrade_User_To_Lichess(req, 'no_token', lichess_username)
+
     res.json({ ok: true });
 });
-*/
 
 
-app.get("/logout", async (req, res) => {
+app.post("/logout", async (req, res) => {
     req.session.userId = undefined
 
     res.send(ok(null))
@@ -111,6 +112,7 @@ import config from './config.json' with { type: 'json' }
 
 // -- Passport Lichess --
 
+/*
 const domain = config.domain
 
 passport.use(new LichessStrategy({
@@ -139,6 +141,7 @@ app.post('/logout', function(req, res, next) {
         res.send(ok(null))
     })
 })
+*/
 
 
 

@@ -7,8 +7,8 @@ export type UserProfile = {
 }
 
 export type OpeningsAgent = {
-    logout(): Promise<void>;
-    get_profile(): Promise<Result<UserProfile>>
+    logout(): Promise<void>
+    upgrade_account(username: string): Promise<void>
     get_searched_playlists(): Promise<Result<Paged<OpeningsPlaylist>>>;
     get_global_recent_playlists(): Promise<Result<OpeningsPlaylist[]>>;
     get_mine_recent_playlists(): Promise<Result<OpeningsPlaylist[]>>;
@@ -72,11 +72,11 @@ export function create_openings_agent(): OpeningsAgent {
 
     return {
         async logout() {
-            await $$('/logout')
+            await $$post('/logout')
             $init_session = $('/session/init')
         },
-        get_profile() {
-            return $init_session.then(wrap_result)
+        async upgrade_account(lichess_username: string) {
+            await $$post('/upgrade-account', { lichess_username })
         },
         undo: function(): Promise<void> {
             return $$post('/undo');
