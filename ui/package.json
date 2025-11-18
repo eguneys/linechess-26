@@ -16,7 +16,6 @@
     "@solid-primitives/storage": "^4.3.3",
     "@solidjs/router": "^0.15.4",
     "chessops": "^0.15.0",
-    "lichess-node": "^0.0.7",
     "solid-blocks": "^0.1.1",
     "solid-js": "^1.9.10"
   },

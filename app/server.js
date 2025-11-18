@@ -9,6 +9,8 @@ import rateLimit from 'express-rate-limit';
 import passport from 'passport'
 import LichessStrategy from 'passport-lichess'
 
+import { computeOFS } from './compute_ofs.ts'
+
 const SECRET = process.env.SECRET_SALT || 's3cr3t-s@lt'
 
 const gen_id = () => Math.random().toString(16).slice(2, 10)
@@ -93,6 +95,7 @@ async function Session_DB_Upgrade_User_To_Lichess(req, lichess_access_token, lic
     }
 }
 
+/*
 app.post("/upgrade-account", async (req, res) => {
     const { lichess_username } = req.body;
 
@@ -100,6 +103,7 @@ app.post("/upgrade-account", async (req, res) => {
 
     res.json({ ok: true });
 });
+*/
 
 
 app.post("/logout", async (req, res) => {
@@ -112,7 +116,6 @@ import config from './config.json' with { type: 'json' }
 
 // -- Passport Lichess --
 
-/*
 const domain = config.domain
 
 passport.use(new LichessStrategy({
@@ -135,13 +138,21 @@ app.get('/auth/lichess/callback', passport.authenticate('lichess', {
 
 
 app.post('/logout', function(req, res, next) {
-    console.log(req.user)
     req.logout(function(err) {
         if (err) { return next(err) }
         res.send(ok(null))
     })
 })
-*/
+
+app.post('/fetch_lichess_token', async function(req, res, next) {
+
+    let token = await db.prepare(`SELECT lichess_access_token from users WHERE id = ?`).get([req.session.userId])
+    if (token === undefined) {
+        res.status(400).send(error("Not logged in."))
+        return
+    }
+    res.send(ok({token: token.lichess_access_token}))
+})
 
 
 
@@ -209,6 +220,33 @@ async function initDb() {
 
 
 
+    await db.exec(`
+        CREATE TABLE IF NOT EXISTS ofs_games (
+            id TEXT PRIMARY KEY,
+            user_id TEXT,
+            best_match_line_id TEXT,
+
+            created_at NUMBER,
+            color TEXT,
+            you TEXT,
+            opponent TEXT,
+            time_control TEXT,
+            did_you_lose NUMBER,
+            did_you_win NUMBER,
+            ucis TEXT,
+
+            ofs NUMBER,
+            depth NUMBER,
+            did_you_deviated NUMBER,
+            nb_deviation NUMBER,
+
+            FOREIGN KEY(user_id) REFERENCES users(id),
+            FOREIGN KEY(best_match_line_id) REFERENCES lines(id)
+        );
+    `);
+
+
+
 
 }
 
@@ -232,6 +270,27 @@ async function db_insert_playlist(db, userId, name, line) {
 // --- Utility ---
 function ok(data) { return { ok: true, data }; }
 function error(message) { return { ok: false, errors: message }; }
+
+function ofs_view_json(game) {
+    return {
+        id: game.id,
+        created_at: game.created_at,
+        color: game.color,
+        you: game.you,
+        opponent: game.opponent,
+        time_control: game.time_control,
+        did_you_lose: game.did_you_lose === 1,
+        did_you_win: game.did_you_win === 1,
+        ucis: game.ucis,
+        ofs: game.ofs,
+        depth: game.depth,
+        did_you_deviated: game.did_you_deviated === 1,
+        nb_deviation: game.nb_deviation,
+        best_match_line_id: game.best_match_line_id
+    }
+}
+
+
 
 function playlist_view_json(playlist) {
     return {
@@ -281,6 +340,7 @@ app.post("/undo", async (req, res) => {
     res.json(ok(null));
 });
 
+/*
 app.post("/search", async (req, res) => {
     const { term } = req.body;
     const playlists = await db.all(
@@ -297,6 +357,7 @@ app.post("/search/next-page", async (req, res) => {
 app.post("/playlist/next-page", async (req, res) => {
     res.json(ok([]));
 });
+*/
 
 app.post("/playlist/like", async (req, res) => {
     const userId = req.session.userId
@@ -564,6 +625,152 @@ app.get("/playlist/selected/:id", async (req, res) => {
     res.json({ playlist: playlist_view_json(playlist), lines: lines.map(line_view_json) });
 });
 
+app.post('/ofs/stats', async (req, res) => {
+    let userId = req.session.userId
+    let { query } = req.body
+
+    if (!Array.isArray(query) || query.length > 70) {
+        res.json(error("Bad query"))
+        return
+    }
+
+    // get today's games
+    query = query.filter(_ => is_timestamp_in_today(_.created_at))
+
+    let pages = await Compute_OFS_and_send_daily(userId, query)
+
+
+    let line_ids = pages.map(_ => _.best_match_line_id).filter(Boolean)
+
+    const placeholders = line_ids.map(() => '?').join(',');
+
+    const stmt = db.prepare(`SELECT lines.*, playlists.name as playlist_name, playlists.id as playlist_id FROM lines INNER JOIN playlists ON playlists.id = lines.playlist_id AND lines.id IN (${placeholders})`);
+    const lines = stmt.all(...line_ids);
+
+    res.send(ok({ pages, lines }))
+})
+
+async function Compute_OFS_and_send_daily(user_id, query) {
+
+    let games = db.prepare(`SELECT * FROM ofs_games WHERE user_id = ?`).all(user_id)
+
+    let ids = games.map(_ => _.id)
+    query = query.filter(game => !ids.includes(game.id))
+
+    let drop_games = games.filter(game => !is_timestamp_in_today(game.created_at))
+
+    games = games.filter(game => is_timestamp_in_today(game.created_at))
+
+    let ofs_data = await Get_OFS_Data_For_User(user_id)
+
+    query = query.map(game => fill_ofs_stats(ofs_data, game))
+
+    const db_delete = db.prepare('DELETE FROM ofs_games WHERE id = ?')
+
+    const deleteMany = db.transaction((data) => {
+        for (const item of data) {
+            db_delete.run([item.id])
+        }
+    })
+
+    deleteMany(drop_games)
+
+    const insert = db.prepare(`INSERT INTO ofs_games (
+        id, user_id, 
+        best_match_line_id,
+        created_at, color, 
+        you, opponent, 
+        time_control, 
+        did_you_lose, did_you_win, ucis
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+    const update = db.prepare('UPDATE ofs_games SET ofs = ?, depth = ?, did_you_deviated = ?, nb_deviation = ? WHERE id = ?')
+
+    const insertMany = db.transaction((data) => {
+        for (const item of data) {
+            insert.run([item.id, user_id, item.best_match_line_id ?? null, item.created_at, item.color, item.you, item.opponent, item.time_control, item.did_you_lose ? 1 : 0, item.did_you_win ? 1 : 0, item.ucis])
+            update.run([item.ofs, item.depth, item.did_you_deviated ? 1 : 0, item.nb_deviation, item.id])
+        }
+    })
+
+    insertMany(query)
+
+    return [...games.map(ofs_view_json), ...query]
+}
+
+async function Get_OFS_Data_For_User(user_id, ucis) {
+    let lines = await db.prepare(`SELECT lines.* FROM lines INNER JOIN playlists ON playlists.id = lines.playlist_id AND playlists.user_id = ?`).all([user_id])
+
+    return lines
+}
+
+function fill_ofs_stats(ofs_data, game) {
+    
+    let best_match
+
+    let game_ucis = game.ucis.split(' ')
+    let nb_deviation = Math.min(30, game_ucis.length)
+
+    while (nb_deviation > 0) {
+
+        best_match = ofs_data.filter(str => game_ucis.join(' ').includes(str.moves.split(' ').slice(0, nb_deviation).join(' ')))
+            .sort((a, b) => b.length - a.length)[0]
+
+        if (best_match !== undefined) {
+            nb_deviation = Math.min(nb_deviation, best_match.moves.split(' ').length)
+            break
+        }
+
+        nb_deviation -= 1
+    }
+
+    if (best_match === undefined) {
+        game.ofs = 0
+        game.depth = 0
+        game.did_you_deviated = true
+        game.nb_deviation = 0
+        return game
+    }
+
+    let opening_moves = best_match.moves.split(' ')
+    let played_moves= opening_moves.slice(0, nb_deviation)
+
+    let all_completed = nb_deviation === opening_moves.length
+
+    let did_you_deviated = (game.color === 'black') === (played_moves.length % 2 === 0)
+
+    let line_id = best_match.id
+
+    let deviator = did_you_deviated ? 'user' : all_completed ? 'none' : 'opponent'
+    let result = game.did_you_win ? 'win' : (game.did_you_lose ? 'loss' : 'draw')
+    let totalMoves = opening_moves.length
+
+    let res = computeOFS({
+        matchedMoves: nb_deviation,
+        deviator,
+        result,
+        totalMoves
+    })
+
+    let ofs = res.OFS
+    let depth = res.Depth
+
+    game.ofs = ofs
+    game.depth = depth
+    game.did_you_deviated = did_you_deviated
+    game.nb_deviation = nb_deviation
+    game.best_match_line_id = line_id
+
+    return game
+}
+
+function is_timestamp_in_today(timestamp) {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    let tomorrow = new Date(today)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+
+    return timestamp >= today.getTime() && timestamp < tomorrow.getTime()
+}
 
 // -- Error Handling --
 

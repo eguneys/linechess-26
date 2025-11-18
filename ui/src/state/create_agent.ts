@@ -1,5 +1,5 @@
 import { Result } from "@badrap/result";
-import type { Color, OpeningsLine, OpeningsPlaylist } from "./types"
+import type { Color, OFS_Stats_Query, OFS_Stats_Result, OpeningsLine, OpeningsPlaylist } from "./types"
 import type { Paged, SelectedPlaylistModel } from "./create_openings_store";
 
 export type UserProfile = {
@@ -7,8 +7,9 @@ export type UserProfile = {
 }
 
 export type OpeningsAgent = {
+    post_ofs_stats_batched(query: OFS_Stats_Query[]): Promise<Result<OFS_Stats_Result>>;
+    fetch_lichess_token(): Promise<Result<{ token: string }>>;
     logout(): Promise<void>
-    upgrade_account(username: string): Promise<void>
     get_searched_playlists(): Promise<Result<Paged<OpeningsPlaylist>>>;
     get_global_recent_playlists(): Promise<Result<OpeningsPlaylist[]>>;
     get_mine_recent_playlists(): Promise<Result<OpeningsPlaylist[]>>;
@@ -56,7 +57,7 @@ class FetchError extends Error {
     }
 }
 
-const wrap_result = (_: any) => {
+const wrap_result = <T>(_: any): Result<T> => {
     if (_ instanceof Error) {
         return Result.err(_)
     } else if (typeof _ === 'object' && _.errors !== undefined) {
@@ -71,12 +72,15 @@ const wrap_result = (_: any) => {
 export function create_openings_agent(): OpeningsAgent {
 
     return {
+        async post_ofs_stats_batched(query: OFS_Stats_Query[]) {
+            return await $$post('/ofs/stats', { query }).then(wrap_result<OFS_Stats_Result>)
+        },
+        async fetch_lichess_token() {
+            return await $$post('/fetch_lichess_token').then(wrap_result<{ token: string }>)
+        },
         async logout() {
             await $$post('/logout')
             $init_session = $('/session/init')
-        },
-        async upgrade_account(lichess_username: string) {
-            await $$post('/upgrade-account', { lichess_username })
         },
         undo: function(): Promise<void> {
             return $$post('/undo');
@@ -91,58 +95,58 @@ export function create_openings_agent(): OpeningsAgent {
             return $$post('/playlist/next-page', { i });
         },
         like_line: function (id: string, yes: boolean): Promise<Result<void>> {
-            return $$post('/line/like', { id, yes }).then(wrap_result);
+            return $$post('/line/like', { id, yes }).then(wrap_result<void>);
         },
         like_playlist: function (id: string, yes: boolean): Promise<Result<void>> {
-            return $$post('/playlist/like', { id, yes }).then(wrap_result);
+            return $$post('/playlist/like', { id, yes }).then(wrap_result<void>);
         },
         edit_playlist: function (id: string, body: { name: string | undefined; }): Promise<Result<OpeningsPlaylist>> {
-            return $$post('/playlist/edit', { id, body }).then(wrap_result);
+            return $$post('/playlist/edit', { id, body }).then(wrap_result<OpeningsPlaylist>);
         },
         create_playlist: function (name: string, line: string | undefined): Promise<Result<OpeningsPlaylist>> {
-            return $$post('/playlist/create', { name, line }).then(wrap_result);
+            return $$post('/playlist/create', { name, line }).then(wrap_result<OpeningsPlaylist>);
         },
         delete_playlist: function (id: string): Promise<Result<void>> {
-            return $$post('/playlist/delete', { id }).then(wrap_result);
+            return $$post('/playlist/delete', { id }).then(wrap_result<void>);
         },
         add_line_to_playlist: function (id: string, line_id: string): Promise<Result<void>> {
-            return $$post('/playlist/add', { id, line_id }).then(wrap_result);
+            return $$post('/playlist/add', { id, line_id }).then(wrap_result<void>);
         },
         delete_line: function (id: string): Promise<Result<void>> {
-            return $$post('/line/delete', { id }).then(wrap_result);
+            return $$post('/line/delete', { id }).then(wrap_result<void>);
         },
         edit_line: function (id: string, body: { name: string | undefined; orientation: Color | undefined; moves: string | undefined; }): Promise<Result<OpeningsLine>> {
-            return $$post('/line/edit', { id, ...body }).then(wrap_result);
+            return $$post('/line/edit', { id, ...body }).then(wrap_result<OpeningsLine>);
         },
         create_line: function (id: string | undefined, name: string, moves: string, orientation: string): Promise<Result<OpeningsLine>> {
-            return $$post('/line/create', { playlist_id: id, name, moves, orientation }).then(wrap_result);
+            return $$post('/line/create', { playlist_id: id, name, moves, orientation }).then(wrap_result<OpeningsLine>);
         },
         set_ordered_line_slots: function (playlist_id: string, lines: string[]): Promise<Result<void>> {
-            return $$post('/line/set_ordered', { playlist_id, lines }).then(wrap_result)
+            return $$post('/line/set_ordered', { playlist_id, lines }).then(wrap_result<void>)
         },
         get_searched_playlists: function () {
-            return $$('/playlist/search').then(wrap_result)
+            return $$('/playlist/search').then(wrap_result<Paged<OpeningsPlaylist>>)
         },
         get_global_recent_playlists: function () {
-            return $$('/playlist/global/recent').then(wrap_result)
+            return $$('/playlist/global/recent').then(wrap_result<OpeningsPlaylist[]>)
         },
         get_mine_recent_playlists: function () {
-            return $$('/playlist/mine/recent').then(wrap_result)
+            return $$('/playlist/mine/recent').then(wrap_result<OpeningsPlaylist[]>)
         },
         get_global_playlists: function () {
-            return $$('/playlist/global').then(wrap_result)
+            return $$('/playlist/global').then(wrap_result<Paged<OpeningsPlaylist>>)
         },
         get_mine_playlists: function () {
-            return $$('/playlist/mine').then(wrap_result)
+            return $$('/playlist/mine').then(wrap_result<OpeningsPlaylist[]>)
         },
         get_liked_playlists: function () {
-            return $$('/playlist/liked').then(wrap_result)
+            return $$('/playlist/liked').then(wrap_result<OpeningsPlaylist[]>)
         },
         get_selected_playlist_model: function (id: string): Promise<Result<SelectedPlaylistModel>> {
-            return $$(`/playlist/selected/${id}`).then(wrap_result)
+            return $$(`/playlist/selected/${id}`).then(wrap_result<SelectedPlaylistModel>)
         },
         get_working_playlist_model: function (): Promise<Result<SelectedPlaylistModel>> {
-            return $$(`/playlist/selected`).then(wrap_result)
+            return $$(`/playlist/selected`).then(wrap_result<SelectedPlaylistModel>)
         },
     }
 }

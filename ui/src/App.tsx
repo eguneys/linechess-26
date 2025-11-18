@@ -4,7 +4,8 @@ import { Router, Route, A }  from '@solidjs/router'
 
 import { SectionOpenings } from './sections/SectionOpenings'
 import { SectionChallenges } from './sections/SectionChallenges'
-import { OpeningStoreProvider, useLichessStore } from './state/OpeningsStore2'
+import { OpeningStoreProvider, useLichessStore, useOpeningsStore } from './state/OpeningsStore2'
+import { API_ENDPOINT } from './state/create_agent'
 
 const MainLegal = lazy(() => import('./misc/MainLegal'))
 const Main404 = lazy(() => import('./misc/Main404'))
@@ -41,7 +42,8 @@ export default App
 
 function MainHome() {
 
-  const [state, { login, logout }] = useLichessStore()
+  const [,{ profile_logout }] = useOpeningsStore()
+  const [state] = useLichessStore()
 
   return (<>
     <main class='main'>
@@ -54,10 +56,10 @@ function MainHome() {
 
             <Suspense fallback={'...'}>
       <Show when={state.username} fallback={
-        <p><small><a onClick={login}>Login with Lichess</a> to make your data publicly available.</small></p>
+        <p><small><A href={`${API_ENDPOINT}/auth/lichess`}>Login with Lichess</A> to make your data publicly available.</small></p>
       }>{username =>
           <>
-              <p>Welcome from Lichess, {username()}!  <small><a onClick={logout}>Logout.</a></small></p>
+              <p>Welcome from Lichess, {username()}!  <small><a onClick={profile_logout}>Logout.</a></small></p>
           </>
         }
       </Show>

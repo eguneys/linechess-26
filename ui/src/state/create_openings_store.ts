@@ -1,5 +1,5 @@
 import { Result } from "@badrap/result"
-import type { Color, OpeningsLine, OpeningsLineId, OpeningsPlaylist, OpeningsPlaylistId, UCIMoves } from "./types"
+import type { Color, OFS_Stats_Query, OFS_Stats_Result, OpeningsLine, OpeningsLineId, OpeningsPlaylist, OpeningsPlaylistId, UCIMoves } from "./types"
 import { createStore } from "solid-js/store"
 import { create_openings_agent } from './create_agent'
 import { createAsync } from "@solidjs/router"
@@ -41,8 +41,9 @@ export type SetPageNavigate = -1 | 0 | 1
 export type SearchTerm = string
 
 export type OpeningsActions = {
-    profile_login(username: string): void
+    post_ofs_stats_batched(query: OFS_Stats_Query[]): Promise<Result<OFS_Stats_Result>>
     profile_logout(): void
+    get_lichess_token(): Promise<Result<{ token: string }>>
     select_line(id: OpeningsLineId): void
     select_playlist(id: OpeningsPlaylistId): void
     create_line(name: string, moves: UCIMoves, orientation: Color): Promise<Result<OpeningsLine>>
@@ -250,24 +251,22 @@ export function create_openings_store(store: OpeningsStore2): OpeningsStore {
         }
     })
 
+    const [fetch_lichess_token, set_fetch_lichess_token] = createSignal(undefined, { equals: false })
+    const get_lichess_token = async () => {
+        fetch_lichess_token()
+        return await $agent.fetch_lichess_token()
+    }
+
     let actions: OpeningsActions = {
-        async profile_login(username: string) {
-            await $agent.upgrade_account(username)
-            set_selected_playlist_id(undefined)
-
-            set_fetch_mine_playlists(true)
-            set_fetch_liked_playlists(true)
-            set_fetch_global_playlists(true)
-            set_fetch_mine_recent_playlists(true)
-            set_fetch_global_recent_playlists(true)
-            set_fetch_searched_lines(false)
-            set_fetch_searched_playlists(false)
-
-
+        post_ofs_stats_batched(query: OFS_Stats_Query[]) {
+            return $agent.post_ofs_stats_batched(query)
         },
+        get_lichess_token,
         async profile_logout() {
 
             await $agent.logout()
+
+            set_fetch_lichess_token(undefined)
 
             set_selected_playlist_id(undefined)
 

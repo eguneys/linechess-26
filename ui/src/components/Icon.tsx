@@ -10,6 +10,7 @@ export type Icon = typeof Icons[keyof typeof Icons]
 export const Icons = {
     Danger: "",
     Link: "",
+    Bullet: "",
     Rapid: "",
     OutLink: "",
     Share: "",

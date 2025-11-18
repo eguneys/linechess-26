@@ -3,32 +3,175 @@
 
 .section-challenges {
 
-    padding: 1em 0;
+    $padding-full: 1em;
+    $padding-half: .8em;
+
+    padding: $padding-full 0;
 
     .challenges {
 
-        display: grid;
+        display: flex;
+        flex-flow: column;
+        justify-content: center;
+        align-items: center;
 
-        grid-template-areas: 'skills'
-            'boards';
+        .summary {
+            font-size: 1.1em;
+        }
 
-        @include media.mq-at-least-col3 {
-            grid-template-areas: 'skills boards';
+        .left {
+            align-self: flex-start;
         }
 
 
-        .skills {
-            grid-area: skills;
-        }
 
-        .boards {
-            grid-area: boards;
-        }
+        .formula {
+            display: flex;
+            align-self: stretch;
+            gap: $padding-full;
+            
+            flex-flow: column;
 
-        .skills,
-        .boards {
             @include media.mq-at-least-col3 {
-                border-left: 1px solid theme.$dark-purple;
+                flex-flow: row;
+            }
+
+            .panel-wrap {
+                flex: 1;
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+
+                display: flex;
+
+                @include media.mq-is-col1 {
+                    flex-flow: column;
+
+                    .lichess-embed {
+                        align-self: center;
+                    }
+                }
+
+                .panel {
+                    flex: 1;
+                    .light-info {
+                        display: flex;
+                        flex-flow: column;
+                        padding: $padding-full;
+                        background: theme.$dark-purple;
+
+                        .playlist {
+                            padding-left: 0.4em;
+                            font-weight: bold;
+                            border-left: 2px solid theme.$white;
+                        }
+
+
+                        .moves {
+                            display: flex;
+                            .index {
+                                font-weight: bold;
+                                color: theme.$blue;
+                            }
+
+                            .index, .move {
+
+                                padding: 0.2em;
+                                color: theme.$light-grey;
+
+                                &.solid {
+                                    color: theme.$green;
+                                    font-weight: bold;
+                                }
+                            }
+                        }
+                    }
+                }
+
+            }
+
+            .tabs-wrap {
+                .tabs {
+                    align-self: flex-start;
+
+                    display: flex;
+
+                    .tab {
+                        padding: $padding-half $padding-full;
+                        cursor: pointer;
+                        border-radius: 8px 8px 0 0;
+                        font-weight: 500;
+                        flex: 0 0 8em;
+                        text-align: center;
+                        transition: .3s;
+                        border-bottom: 4px solid transparent;
+
+                        &.active {
+                            border-bottom: 4px solid theme.$blue;
+                            font-weight: bold;
+                        }
+
+                        &:hover {
+                            background: theme.$light-grey;
+                            color: theme.$dark-blue;
+                            font-weight: bold;
+                        }
+                    }
+                }
+
+                .tabs-content {
+                    align-self: flex-start;
+                    width: 100%;
+                    height: 250px;
+                    display: flex;
+                    flex-flow: column;
+                    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+
+                    .list-wrap {
+                        overflow-y: scroll;
+                    }
+
+                    .gap {
+                        flex: 1;
+                    }
+
+                    .list {
+                        flex: 1;
+                        border-collapse: collapse;
+                        width: 100%;
+                    .item {
+                        cursor: pointer;
+
+                        .time {
+                            color: theme.$light-grey;
+                            font-style: italic;
+                        }
+
+                        &:hover {
+                            background: theme.$pink;
+                        }
+
+                        &.active {
+                            background: theme.$blue;
+                        }
+
+                        td {
+                            padding: $padding-half;
+                            border: none !important;
+                        }
+                    }
+                }
+
+                .total {
+                    .bar {
+                        height: 0.5em;
+                        background: theme.$light-grey;
+                        display: flex;
+
+                        .progress {
+                            background: theme.$green;
+                        }
+                    }
+                }
+                }
             }
         }
     }
