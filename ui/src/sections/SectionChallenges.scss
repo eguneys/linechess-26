@@ -41,6 +41,12 @@
                 box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 
                 display: flex;
+                
+                .lichess-embed {
+                    display: flex;
+                    justify-items: center;
+                    align-items: center;
+                }
 
                 @include media.mq-is-col1 {
                     flex-flow: column;
@@ -53,22 +59,40 @@
                 .panel {
                     flex: 1;
                     .light-info {
+
+                        height: 100%;
+                        border-right: 2px solid theme.$orange;
                         display: flex;
                         flex-flow: column;
-                        padding: $padding-full;
+                        align-items: stretch;
+
+                        .title {
+                            flex: 1;
                         background: theme.$dark-purple;
+                        padding: $padding-full;
+                        display: flex;
+                        flex-flow: column;
 
                         .playlist {
                             padding-left: 0.4em;
                             font-weight: bold;
                             border-left: 2px solid theme.$white;
                         }
+                        }
 
+                        .moves-wrap {
 
-                        .moves {
-                            max-width: 400px;
+                            flex: 1;
+                            background: theme.$dark-grey;
+                            padding: $padding-half;
+
+                            overflow-y: scroll;
+
+                            .list {
                             display: flex;
                             flex-flow: row wrap;
+
+
                             .index {
                                 font-weight: bold;
                                 color: theme.$blue;
@@ -84,6 +108,7 @@
                                     font-weight: bold;
                                 }
                             }
+                        }
                         }
                     }
                 }

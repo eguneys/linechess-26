@@ -178,9 +178,12 @@ function OFS_LightModelInfo(props: { id?: OpeningsLineId, nb_deviation?: number 
     <div class='light-info'>
         <Show when={line()}>{ line => 
                 <>
+                <div class="title">
                     <span class='playlist'>{line().playlist_name}</span>
                     <span class='line'>{line().slot + 1}. {line().name}</span>
-                    <div class='moves'>
+                </div>
+                    <div class='moves-wrap'>
+                        <div class='list'>
                         <For each={ucis_to_sans(line().moves.split(' '))}>{ (item, index) => 
                             <>
                                 <Show when={index() % 2 === 0}>
@@ -189,6 +192,7 @@ function OFS_LightModelInfo(props: { id?: OpeningsLineId, nb_deviation?: number 
                                 <span class='move' classList={{solid: index() < nb_deviation()}}>{item}</span>
                             </>
                             }</For>
+                        </div>
                     </div>
                 </>
         }</Show>
