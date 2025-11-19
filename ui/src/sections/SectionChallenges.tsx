@@ -75,10 +75,10 @@ export const SectionChallenges = () => {
         const max_classical = 1
 
 
-        let raw_bullet = acc_bullet * 0.5 + Math.min(nb_bullet / max_bullet, 1) * 0.5
-        let raw_blitz = acc_blitz * 0.5 + Math.min(nb_blitz / max_blitz, 1) * 0.5
-        let raw_rapid = acc_rapid * 0.5 + Math.min(nb_rapid / max_rapid, 1) * 0.5
-        let raw_classical = acc_classical * 0.5 + Math.min(nb_classical / max_classical, 1) * 0.5
+        let raw_bullet = acc_bullet * (0.8 + 2 * Math.min(nb_bullet / max_bullet, 1))
+        let raw_blitz = acc_blitz * (0.8 + 2 * Math.min(nb_blitz / max_blitz, 1))
+        let raw_rapid = acc_rapid * (0.8 + 2 * Math.min(nb_rapid / max_rapid, 1))
+        let raw_classical = acc_classical * (0.8 + 2 * Math.min(nb_classical / max_classical, 1))
 
         let raw = raw_bullet * 0.1 +
         raw_blitz * 0.2 +

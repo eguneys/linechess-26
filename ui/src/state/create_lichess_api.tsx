@@ -59,7 +59,7 @@ export function create_lichess_api(store: OpeningsStore2): LichessApiStore {
       if ($ && u) {
         let res = await $.fetch_games(u, untrack(() => fetch_games_since()))
 
-        set_fetch_games_since(new Date().getTime())
+        set_fetch_games_since(new Date().getTime() - 10 * 60 * 1000)
         return res
       }
     })
