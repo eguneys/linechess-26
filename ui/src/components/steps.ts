@@ -1,6 +1,6 @@
-import { Chess, parseUci } from "chessops"
+import { Chess, makeUci, parseUci } from "chessops"
 import { INITIAL_FEN, makeFen, parseFen } from "chessops/fen"
-import { makeSan } from "chessops/san"
+import { makeSan, parseSan } from "chessops/san"
 
 export type FEN = string
 export type SAN = string
@@ -31,6 +31,37 @@ export const steps_add_uci = (steps: Step[], uci: UCI) => {
         uci,
         san
     }
+}
+
+const single_line_pgn_to_ucis = (pgn: string) => {
+
+    let res: UCI[] = []
+
+    let pos = fen_pos(INITIAL_FEN)
+
+    let lines = pgn.split(' ')
+
+    for (let line of lines) {
+        let move = parseSan(pos, line)
+
+        if (move) {
+            res.push(makeUci(move))
+            pos.play(move)
+        }
+    }
+
+    return res
+}
+
+export const steps_make_from_PGN = (pgn: string) => {
+    let steps: Step[] = []
+
+    let ucis = single_line_pgn_to_ucis(pgn)
+
+    ucis.map(uci => {
+        steps = [...steps, steps_add_uci(steps, uci)]
+    })
+    return steps
 }
 
 export const steps_make_from_UCIs = (ucis: UCI[]) => {

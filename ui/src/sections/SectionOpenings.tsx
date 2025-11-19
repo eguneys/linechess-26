@@ -30,7 +30,8 @@ export const SectionOpenings = () => {
         goto_prev_step,
         goto_set_cursor,
         clear_steps,
-        delete_after
+        delete_after,
+        import_PGN
     }] = useBuildStore()
 
     //"b1c3 b8c6 c3b1 c6b8 ".repeat(30).trim().split(" ").forEach(add_uci_and_goto_it)
@@ -70,6 +71,11 @@ export const SectionOpenings = () => {
         set_copied(false)
     }
 
+    const on_paste_pgn = async () => {
+        let pgn = await navigator.clipboard.readText()
+
+        import_PGN(pgn)
+    }
 
     let line_name: string
 
@@ -136,6 +142,7 @@ export const SectionOpenings = () => {
                         <span class='no-line-to-save'>Play an opening line to save it.</span>
                     </>} san_moves={obs.san_moves} cursor={obs.cursor} on_set_cursor={goto_set_cursor} />
                 <div class='replay-tools'>
+                    <a onClick={on_paste_pgn}>Paste PGN</a>
                     <a onClick={on_copy_steps}>{Copy()}</a>
                     <a onClick={clear_steps}>Clear</a>
                     <a onClick={delete_after}>Delete after</a>

@@ -2,7 +2,7 @@ import { opposite, type Color } from "chessops"
 import type { FEN, SAN, UCI } from "./types"
 import { batch, createMemo } from "solid-js"
 import { createWritableMemo } from "@solid-primitives/memo"
-import { fen_turn, steps_add_uci, steps_export_PGN, steps_export_UCI, steps_make_from_UCIs, type Step } from "../components/steps"
+import { fen_turn, steps_add_uci, steps_export_PGN, steps_export_UCI, steps_make_from_PGN, steps_make_from_UCIs, type Step } from "../components/steps"
 import { INITIAL_FEN } from "chessops/fen"
 import type { OpeningsStore2 } from "./OpeningsStore2"
 
@@ -29,6 +29,7 @@ type OpeningsBuildActions = {
     clear_steps(): void
     delete_after(): void
     import_UCIs(ucis: string): void
+    import_PGN(pgn: string): void
 }
 
 export type OpeningsBuildStore = [OpeningsBuildState, OpeningsBuildActions]
@@ -55,6 +56,10 @@ export const create_build_store = (store: OpeningsStore2): OpeningsBuildStore =>
     const export_UCI = createMemo(() => steps_export_UCI(steps()))
 
     const import_UCIs = (ucis: string) => set_steps(steps_make_from_UCIs(ucis.split(' ')))
+
+    const import_PGN = (pgn: string) => set_steps(steps_make_from_PGN(pgn))
+
+
 
     let state = {
         get orientation() {
@@ -96,6 +101,7 @@ export const create_build_store = (store: OpeningsStore2): OpeningsBuildStore =>
         flip() {
             set_orientation(opposite(orientation()))
         },
+        import_PGN,
         import_UCIs,
         set_orientation,
         add_uci_and_goto_it(uci: UCI) {
