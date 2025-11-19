@@ -7,6 +7,7 @@ import Icon, { type Icon as IconType, Icons } from '../components/Icon'
 import DailyTimeAgo from '../components/TimeAgo'
 import { ucis_to_sans } from '../logic/chess'
 import { ply_to_index_omit_black } from '../components/steps'
+import { makePersisted } from '@solid-primitives/storage'
 
 export const SectionChallenges = () => {
 
@@ -14,7 +15,9 @@ export const SectionChallenges = () => {
 
     type Tab = 'bullet' | 'blitz' | 'rapid' | 'classical'
 
-    const [tab, set_tab] = createSignal<Tab>('rapid')
+    const [tab, set_tab] = makePersisted(createSignal<Tab>('rapid'), {
+        name: '.linechess.challenges-tab'
+    })
 
     const is_tab = createSelector(tab)
 
@@ -28,7 +31,11 @@ export const SectionChallenges = () => {
         return get_ofs_list_all().filter(_ => _.time_control === t)
     })
 
-    const [selected_ofs_game, set_selected_ofs_game] = createSignal<OFS_Stats_Query_With_Stats | undefined>(undefined)
+    const [selected_ofs_game_id, set_selected_ofs_game_id] = makePersisted(createSignal<string | undefined>(undefined), {
+        name: '.linechess.selected-ofs-game-id'
+    })
+
+    const selected_ofs_game = createMemo(() => get_ofs_list().find(_ => _.id === selected_ofs_game_id()))
 
 
     const get_tab_icon = createMemo(() => {
@@ -128,7 +135,7 @@ export const SectionChallenges = () => {
                         </div>
                         <div class='tabs-content'>
                             <div class='list-wrap'>
-                            <OFSList selected_item={selected_ofs_game()} on_selected_item={set_selected_ofs_game} list={get_ofs_list()} icon={get_tab_icon()} />
+                            <OFSList selected_item={selected_ofs_game()} on_selected_item={_ => set_selected_ofs_game_id(_.id)} list={get_ofs_list()} icon={get_tab_icon()} />
                                     </div>
                             <div class='gap'></div>
                             <div class='total'>
@@ -172,8 +179,8 @@ function OFS_LightModelInfo(props: { id?: OpeningsLineId, nb_deviation?: number 
         <Show when={line()}>{ line => 
                 <>
                     <span class='playlist'>{line().playlist_name}</span>
-                    <span class='line'>{line().slot}. {line().name}</span>
-                    <span class='moves'>
+                    <span class='line'>{line().slot + 1}. {line().name}</span>
+                    <div class='moves'>
                         <For each={ucis_to_sans(line().moves.split(' '))}>{ (item, index) => 
                             <>
                                 <Show when={index() % 2 === 0}>
@@ -182,7 +189,7 @@ function OFS_LightModelInfo(props: { id?: OpeningsLineId, nb_deviation?: number 
                                 <span class='move' classList={{solid: index() < nb_deviation()}}>{item}</span>
                             </>
                             }</For>
-                    </span>
+                    </div>
                 </>
         }</Show>
     </div>
