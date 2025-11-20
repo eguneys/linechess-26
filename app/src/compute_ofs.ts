@@ -1,5 +1,5 @@
-type Result = "win" | "draw" | "loss";
-type Deviator = "user" | "opponent" | "none";
+export type Result = "win" | "draw" | "loss";
+export type Deviator = "user" | "opponent" | "none";
 
 function clamp(v:number, a=0, b=100){ return Math.max(a, Math.min(b, v)); }
 
