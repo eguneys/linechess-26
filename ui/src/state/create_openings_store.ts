@@ -225,33 +225,79 @@ export function create_openings_store(store: OpeningsStore2): OpeningsStore {
     let [state, set_state] = createStore<OpeningsState>({
         get selected_line() {
             let id = selected_line_id()
-            return get_selected_playlist_model()?.unwrap()
-                .lines.find(_ => _._id === id)
+
+
+            let res = get_selected_playlist_model()
+
+            if (!res || res.isErr) {
+                return undefined
+            }
+
+            return res.value.lines.find(_ => _._id === id)
         },
         get playlist() {
-             return get_selected_playlist_model()?.unwrap()
+            let res = get_selected_playlist_model()
+
+            if (!res || res.isErr) {
+                return undefined
+            }
+
+            return res.value
         },
         get mine_playlists() {
-            let list = get_mine_playlists()?.unwrap()
-            return list ? { list } : undefined
+            let res = get_mine_playlists()
+
+            if (!res || res.isErr) {
+                return undefined
+            }
+
+            return { list: res.value }
         },
         get liked_playlists() {
-            let list = get_liked_playlists()?.unwrap()
-            return list ? { list } : undefined
+            let res = get_liked_playlists()
+
+            if (!res || res.isErr) {
+                return undefined
+            }
+
+            return { list: res.value }
         },
         get global_playlists() {
-            return get_global_playlists()?.unwrap()
+            let res = get_global_playlists()
+
+            if (!res || res.isErr) {
+                return undefined
+            }
+
+            return res.value
         },
         get mine_recent_playlists() {
-            let list = get_mine_recent_playlists()?.unwrap()
-            return list ? { list } : undefined
+            let res = get_mine_recent_playlists()
+
+            if (!res || res.isErr) {
+                return undefined
+            }
+
+            return { list: res.value }
         },
         get global_recent_playlists() {
-            let list = get_global_recent_playlists()?.unwrap()
-            return list ? { list } : undefined
+
+            let res = get_global_recent_playlists()
+
+            if (!res || res.isErr) {
+                return undefined
+            }
+
+            return { list: res.value }
         },
         get searched_playlists() {
-            return get_searched_playlists()?.unwrap()
+            let res = get_searched_playlists()
+
+            if (!res || res.isErr) {
+                return undefined
+            }
+
+            return res.value
         }
     })
 

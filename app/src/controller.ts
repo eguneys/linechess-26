@@ -53,7 +53,7 @@ router.use((req, res, next) => {
 router.post("/logout", async (req, res) => {
     delete req.session.userId
 
-    res.status(204).send(ok(null))
+    res.send(ok(void 0))
 })
 
 router.post('/fetch_lichess_token', async function(req, res, next) {
@@ -107,7 +107,7 @@ router.post("/playlist/like", async (req, res) => {
     let like = await service.playlist_like(userId, playlist_id, yes)
 
     like.unwrap(() => {
-        res.status(204).json(ok(null));
+        res.json(ok(void 0));
     }, err => {
         res.status(500).json(error('Internal server error'));
     })
@@ -155,7 +155,7 @@ router.post("/playlist/delete", async (req, res) => {
     let result = await service.delete_playlist(id)
 
     result.unwrap(() => {
-        res.status(204).json(ok(null));
+        res.json(ok(void 0));
     }, () => {
         res.status(500).json(error('Internal server error'));
     })
@@ -167,7 +167,7 @@ router.post("/line/delete", async (req, res) => {
     let result = await service.delete_line(id)
 
     result.unwrap(() => {
-        res.status(204).json(ok(null));
+        res.json(ok(void 0));
     }, () => {
         res.status(500).json(error('Internal server error'));
     })
@@ -216,7 +216,7 @@ router.post("/line/set_ordered", async (req, res) => {
     let result = await service.order_lines(lines, playlist_id)
    
     result.unwrap(() => {
-        res.status(204).json(ok(null));
+        res.json(ok(void 0));
     }, err => {
         res.status(500).json(error('Internal server error'));
     })

@@ -342,6 +342,8 @@
                 display: flex;
                 flex-flow: column;
                 min-height: 0;
+                /* TODO remove this after dropdown fix */
+                padding-bottom: 5em;
 
                 .a-line {
                     display: flex;
