@@ -25,10 +25,10 @@ export function computeOFS({
 
   // Weighted raw score
   const raw =
-    0.6 * Depth +
+    0.7 * Depth +
     0.4 * Win   -
-    0.5 * UserDev -
-    0.5 * OppDev;
+    0.2 * UserDev -
+    0.1 * OppDev;
 
   const OFS = clamp(Math.round(raw * 10) / 10, 0, 100); // round to 1 decimal
 
