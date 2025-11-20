@@ -133,18 +133,22 @@ export function create_openings_store(store: OpeningsStore2): OpeningsStore {
         return $agent.get_global_playlists()
     })
     const get_mine_recent_playlists = createAsync(async () => {
+        return Result.err(new Error('Not implemented'))
+
         if (!fetch_mine_recent_playlists()) {
             return Result.err(new Error('No Fetch Requested'))
         }
         return $agent.get_mine_recent_playlists()
     })
     const get_global_recent_playlists = createAsync(async () => {
+        return Result.err(new Error('Not implemented'))
         if (!fetch_global_recent_playlists()) {
             return Result.err(new Error('No Fetch Requested'))
         }
         return $agent.get_global_recent_playlists()
     })
     const get_searched_playlists = createAsync(async () => {
+        return Result.err(new Error('Not implemented'))
         if (!fetch_searched_playlists()) {
             return Result.err(new Error('No Fetch Requested'))
         }

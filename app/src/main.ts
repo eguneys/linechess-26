@@ -8,6 +8,7 @@ import rateLimit from 'express-rate-limit';
 import config from '../config.json' with { type: 'json' }
 
 import { init_db } from './repository.ts'
+import { router } from './controller.ts'
 
 const SECRET = process.env.SECRET_SALT || 's3cr3t-s@lt'
 
@@ -42,11 +43,13 @@ app.use(session({
 }))
 
 
+app.use(router)
+
+
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
     console.error(err)
     res.status(500).send({ errors: err.message })
 })
-
 
 // --- Start ---
 const PORT = process.env.PORT || config.port || 3300;

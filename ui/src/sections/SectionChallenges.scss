@@ -32,10 +32,6 @@
             
             flex-flow: column;
 
-            @include media.mq-at-least-col3 {
-                flex-flow: row;
-            }
-
             .panel-wrap {
                 flex: 1;
                 box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
@@ -120,6 +116,7 @@
                     align-self: flex-start;
 
                     display: flex;
+                    border-bottom: 2px solid theme.$light-peach;
 
                     .tab {
                         padding: $padding-half $padding-full;
@@ -147,23 +144,56 @@
                 .tabs-content {
                     align-self: flex-start;
                     width: 100%;
-                    height: 250px;
                     display: flex;
                     flex-flow: column;
                     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-
-                    .list-wrap {
-                        overflow-y: scroll;
-                    }
 
                     .gap {
                         flex: 1;
                     }
 
-                    .list {
+                    table {
                         flex: 1;
                         border-collapse: collapse;
+                        width: 70%;
+                        table-layout:fixed;
+                        justify-self: center;
+                    border-left: 2px solid theme.$light-peach;
+                    border-right: 2px solid theme.$light-peach;
+
+                    @include media.mq-is-col1 {
                         width: 100%;
+                    }
+
+                        thead {
+                            tr {
+                                display: flex;
+                            }
+                            th {
+                                text-align: left;
+                                padding: $padding-half;
+                            }
+                        }
+
+                        tr {
+                            display: flex;
+                            td,
+                                th {
+                                    flex: 1;
+                            
+                                    &:first-child {
+                                        flex: 0 0 5em;
+                                    }
+                                }
+
+                        }
+
+                        tbody {
+                            display: block;
+                            height: 200px;
+                            width: 100%;
+                        overflow-y: auto;
+
                     .item {
                         cursor: pointer;
 
@@ -184,6 +214,26 @@
                             padding: $padding-half;
                             border: none !important;
                         }
+
+                                                .result {
+
+                                                    span {
+                                                        text-shadow: 2px 2px 3px theme.$black;
+                                                    }
+
+                                                    .win {
+                                                        color: theme.$green;
+                                                    }
+                        
+                                                    .lose {
+                                                        color: theme.$red;
+                                                    }
+                        
+                                                    .draw {
+                                                        color: theme.$white;
+                                                    }
+                                                }
+                                            }
                     }
                 }
 

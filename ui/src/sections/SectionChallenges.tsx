@@ -8,6 +8,7 @@ import DailyTimeAgo from '../components/TimeAgo'
 import { ucis_to_sans } from '../logic/chess'
 import { ply_to_index_omit_black } from '../components/steps'
 import { makePersisted } from '@solid-primitives/storage'
+import { Dynamic } from 'solid-js/web'
 
 export const SectionChallenges = () => {
 
@@ -134,7 +135,7 @@ export const SectionChallenges = () => {
                             <div onClick={() => set_tab('classical')} class='tab' classList={{ active: is_tab('classical') }}><Icon icon={Icons.Classic} /> Classical</div>
                         </div>
                         <div class='tabs-content'>
-                            <div class='list-wrap'>
+                            <div class='table-wrap'>
                             <OFSList selected_item={selected_ofs_game()} on_selected_item={_ => set_selected_ofs_game_id(_.id)} list={get_ofs_list()} icon={get_tab_icon()} />
                                     </div>
                             <div class='gap'></div>
@@ -170,7 +171,7 @@ function OFS_LightModelInfo(props: { id?: OpeningsLineId, nb_deviation?: number 
 
     const get_lines = createMemo(() => state.daily_ofs_stats?.lines ?? [])
 
-    const line = createMemo(() => get_lines().find(_ => _.id === props.id))
+    const line = createMemo(() => get_lines().find(_ => _._id === props.id))
 
     const nb_deviation = createMemo(() => props.nb_deviation ?? 0)
 
@@ -205,12 +206,13 @@ function OFSList(props: { selected_item?: OFS_Stats_Query_With_Stats, list: OFS_
     const isSelected = createSelector(() => props.selected_item)
 
     return (<>
-        <table class='list'>
+        <table class='table'>
             <thead>
                 <tr>
                 <th>Speed</th>
                 <th>Players</th>
                 <th>Date</th>
+                <th>Result</th>
                 <th>Fitness Score</th>
                 </tr>
             </thead>
@@ -220,10 +222,17 @@ function OFSList(props: { selected_item?: OFS_Stats_Query_With_Stats, list: OFS_
                     <td><Icon icon={props.icon}/></td>
                     <td>{item.you} vs {item.opponent}</td>
                     <td><span class='time'><DailyTimeAgo time={item.created_at}/> </span></td>
+                    <td><span class='result'><Dynamic component={result_icons[item.did_you_win ? 'win' : item.did_you_lose ? 'lose' : 'draw']}/></span></td>
                     <td><span class='score'>{Math.floor(item.ofs)}%</span></td>
                 </tr>
             }</For>
             </tbody>
         </table>
     </>)
+}
+
+const result_icons = {
+    win: () => <span class='win'><Icon icon={Icons.RatingUp}/></span>,
+    lose: () => <span class='lose'><Icon icon={Icons.RatingDown}/></span>,
+    draw: () => <span class='draw'>1/2</span>
 }

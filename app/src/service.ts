@@ -338,6 +338,20 @@ export async function compute_ofs_and_get_daily(user_id: UserId, query: OFS_Game
 
     let query_filled = query.map(game => fill_ofs_stats(ofs_data, game))
 
+
+    let r_del = await repository.delete_many_games(drop_games)
+
+    if (r_del.isErr) {
+        return Result.err(new InfrastructureError(r_del.error.message))
+    }
+
+    let r_ins = await repository.insert_many_games(user_id, query_filled)
+
+    if (r_ins.isErr) {
+        return Result.err(new InfrastructureError(r_ins.error.message))
+    }
+
+
     let pages: OFS_Game_Json[] = [...games.map(ofs_view_json), ...query_filled]
 
 

@@ -1,6 +1,6 @@
 import { Result } from "@badrap/result";
 import sqlite3 from "better-sqlite3";
-import type { Color, Game, Line, LineId, Playlist, PlaylistId, Ucis, User, UserId } from "./types.ts";
+import type { Color, Game, Line, LineId, OFS_Game_Query, Playlist, PlaylistId, Ucis, User, UserId } from "./types.ts";
 
 let db: sqlite3.Database
 
@@ -273,10 +273,10 @@ export async function find_playlist_by_id(id: PlaylistId, user_id: UserId): Prom
 
         if (res) {
 
-            let author = await db.prepare(`SELECT lichess_username FROM users WHERE id = ?`).get([user_id]) as string | undefined
+            let author = await db.prepare(`SELECT lichess_username FROM users WHERE id = ?`).get([user_id]) as { lichess_username: string } | undefined
 
             if (author) {
-                res.author = author
+                res.author = author.lichess_username
             }
         }
 
@@ -602,7 +602,7 @@ export async function delete_many_games(games: Game[]): Promise<Result<void>> {
     }
 }
 
-export async function insert_many_games(user_id: UserId, games: Game[]): Promise<Result<void>> {
+export async function insert_many_games(user_id: UserId, games: OFS_Game_Query[]): Promise<Result<void>> {
     try {
         const insert = db.prepare(`
         INSERT INTO ofs_games (

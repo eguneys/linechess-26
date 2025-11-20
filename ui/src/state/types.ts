@@ -63,7 +63,7 @@ export type OFS_Stats = {
 
 
 export type OFS_Line_Model_Light = {
-  id: OpeningsLineId
+  _id: OpeningsLineId
   playlist_id: OpeningsPlaylistId
   name: string
   playlist_name: string
