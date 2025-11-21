@@ -26,23 +26,46 @@
 
 
         .formula {
-            display: flex;
-            align-self: stretch;
-            gap: $padding-full;
-            
-            flex-flow: column;
+
+            display: grid;
+
+            grid-template-areas: 'table panel'
+                    'embed embed';
+
+            grid-template-columns: 4fr 3fr;
+
+            @include media.mq-is-col1 {
+                grid-template-areas: 'table'
+                        'panel';
+                grid-template-columns: 1fr;
+            }
+
+
+            .table-wrap {
+                grid-area: table;
+            }
 
             .panel-wrap {
-                flex: 1;
+                grid-area: 'panel';
+            }
+
+            .lichess-embed {
+                grid-area: 'embed';
+            }
+
+
+            .lichess-embed {
+                justify-self: center;
+                display: flex;
+                justify-items: center;
+                align-items: center;
+            }
+
+            .panel-wrap {
                 box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 
                 display: flex;
                 
-                .lichess-embed {
-                    display: flex;
-                    justify-items: center;
-                    align-items: center;
-                }
 
                 @include media.mq-is-col1 {
                     flex-flow: column;
@@ -142,8 +165,6 @@
                 }
 
                 .tabs-content {
-                    align-self: flex-start;
-                    width: 100%;
                     display: flex;
                     flex-flow: column;
                     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
@@ -153,9 +174,7 @@
                     }
 
                     table {
-                        flex: 1;
                         border-collapse: collapse;
-                        width: 70%;
                         table-layout:fixed;
                         justify-self: center;
                     border-left: 2px solid theme.$light-peach;

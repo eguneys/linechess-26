@@ -148,12 +148,12 @@ export const SectionChallenges = () => {
                         <div class='panel'>
                             <OFS_LightModelInfo id={selected_ofs_game()?.best_match_line_id} nb_deviation={selected_ofs_game()?.nb_deviation}/>
                         </div>
-                        <div class='lichess-embed'>
-                            <Show when={selected_ofs_game()}>{game =>
-                                <iframe title='lichess-game' src={`https://lichess.org/embed/game/${game().id}?theme=auto&bg=dark`}
-                                    width={460} height={306}></iframe>
-                            }</Show>
-                        </div>
+                    </div>
+                    <div class='lichess-embed'>
+                        <Show when={selected_ofs_game()}>{game =>
+                            <iframe title='lichess-game' src={`https://lichess.org/embed/game/${game().id}?theme=auto&bg=dark`}
+                                width={460} height={306}></iframe>
+                        }</Show>
                     </div>
                 </div>
                 <div>
