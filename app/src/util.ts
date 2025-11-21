@@ -22,8 +22,8 @@ export function fill_ofs_stats(ofs_data: Line[], game: OFS_Game_Query): OFS_Game
     while (nb_deviation > 0) {
 
         best_match = ofs_data.filter(str => 
-            game_ucis.join(' ')
-                .includes(
+            game.ucis
+                .startsWith(
                     str.moves.split(' ')
                         .slice(0, nb_deviation)
                         .join(' '))
