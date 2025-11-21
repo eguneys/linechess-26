@@ -32,7 +32,7 @@
             grid-template-areas: 'table panel'
                     'embed embed';
 
-            grid-template-columns: 4fr 3fr;
+            grid-template-columns: auto 500px;
 
             @include media.mq-is-col1 {
                 grid-template-areas: 'table'
