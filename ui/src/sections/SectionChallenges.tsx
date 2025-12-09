@@ -88,10 +88,10 @@ export const SectionChallenges = () => {
         let raw_rapid = acc_rapid * (0.8 + 2 * Math.min(nb_rapid / max_rapid, 1))
         let raw_classical = acc_classical * (0.8 + 2 * Math.min(nb_classical / max_classical, 1))
 
-        let raw = raw_bullet * 0.1 +
-        raw_blitz * 0.2 +
+        let raw = raw_bullet * 0.3 +
+        raw_blitz * 0.3 +
         raw_rapid * 0.3 +
-        raw_classical * 0.4
+        raw_classical * 0.1
 
         return { ofs: raw * 100, raw_bullet, raw_blitz, raw_rapid, raw_classical }
     })
