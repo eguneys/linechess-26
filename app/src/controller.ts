@@ -43,6 +43,7 @@ router.get("/session/init", async (req, res) => {
 router.use((req, res, next) => {
     if (!req.session.userId) {
         res.status(401).json(error("No session"));
+        return
     }
     next();
 })
