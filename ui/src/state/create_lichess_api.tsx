@@ -32,12 +32,19 @@ export function create_lichess_api(store: OpeningsStore2): LichessApiStore {
       return hasToken.map(_ => {
         let $agent = create_lichess_agent(_.token)
         return $agent
-      }).unwrap()
+      })
     })
 
-    const username = createAsync<string>(async () => {
-        return $agent()?.fetch_username()
-    })
+  const username = createAsync<string>(async () => {
+    let $ = $agent()
+
+    if (!$ || $.isErr) {
+      return undefined
+    }
+
+
+    return $.value.fetch_username()
+  })
 
 
     let today = new Date()
@@ -56,8 +63,8 @@ export function create_lichess_api(store: OpeningsStore2): LichessApiStore {
       let $ = $agent()
       let u = username()
 
-      if ($ && u) {
-        let res = await $.fetch_games(u, untrack(() => fetch_games_since()))
+      if ($?.isOk && u) {
+        let res = await $.value.fetch_games(u, untrack(() => fetch_games_since()))
 
         set_fetch_games_since(new Date().getTime() - 10 * 60 * 1000)
         return res

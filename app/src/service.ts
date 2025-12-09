@@ -47,7 +47,7 @@ export async function get_lichess_token_by_user_id(user_id: string) {
     const token = await repository.get_lichess_token_by_user_id(user_id)
 
     return token.chain(token => {
-        if (!token) {
+        if (!token || token.lichess_access_token === null) {
             return Result.err(new LichessTokenNotFoundErrorForUser(user_id))
         } else {
             return Result.ok(token)
@@ -62,8 +62,8 @@ export async function upgrade_user_to_lichess(user_id: UserId, accessToken: stri
 
     let res = await repository.upgrade_user_to_lichess(user_id, accessToken, lichess_username)
 
-    let res2: Result<User> = await res.unwrap(() => {
-        return get_user_by_id(user_id)
+    let res2: Result<User> = await res.unwrap(async () => {
+        return await get_user_by_id(user_id)
     }, err => {
         return Result.err(new InfrastructureError(err.message))
     })

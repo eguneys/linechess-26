@@ -13,7 +13,50 @@ function error(message: string | string[]) { return { ok: false, errors: message
 
 export const router = express.Router()
 
+router.use(passport.session())
+
+// -- Passport Lichess --
+
+const domain = config.domain
+
+passport.use(new LichessStrategy({
+    clientID: gen_id(),
+    callbackURL: `${domain}/auth/lichess/callback`,
+    passReqToCallback: true
+}, async function (req: express.Request, accessToken: string, refreshToken: string, profile: any, cb: Function) {
+
+    let user = await service.upgrade_user_to_lichess(req.session.userId!, accessToken, profile.username)
+
+    user.unwrap(user => {
+        cb(null, user)
+    }, err => cb(err))
+}))
+
+passport.serializeUser(function (user, done) {
+    done(null, user);
+});
+
+passport.deserializeUser(function (user: any, done) {
+    done(null, user);
+});
+
+router.get('/auth/lichess', passport.authenticate('lichess'))
+
+router.get('/auth/lichess/callback', passport.authenticate('lichess', {
+    successRedirect: config.spa_domain,
+    failureRedirect: config.spa_domain 
+}))
+
+
+
 router.get("/session/init", async (req, res) => {
+    if (!req.session.userId) {
+        if (req.user) {
+            req.session.userId = req.user.id
+        }
+    }
+
+
     if (!req.session.userId) {
         let user = await service.create_user()
 
@@ -40,21 +83,16 @@ router.get("/session/init", async (req, res) => {
     }
 });
 
-router.use((req, res, next) => {
-    if (!req.session.userId) {
-        res.status(401).json(error("No session"));
-        return
-    }
-    next();
-})
-
 
 // --- Session Authorization --
 
-router.post("/logout", async (req, res) => {
+router.post("/logout", async (req, res, next) => {
     delete req.session.userId
+    req.logout(function (err) {
+        if (err) { return next(err)}
+        res.send(ok(void 0))
+    })
 
-    res.send(ok(void 0))
 })
 
 router.post('/fetch_lichess_token', async function(req, res, next) {
@@ -64,39 +102,13 @@ router.post('/fetch_lichess_token', async function(req, res, next) {
     token.unwrap(token => {
         res.send(ok({token: token.lichess_access_token}))
     }, err => {
-        if (res instanceof service.LichessTokenNotFoundErrorForUser) {
+        if (err instanceof service.LichessTokenNotFoundErrorForUser) {
             res.status(404).send(error(err.message))
         } else {
             res.status(500).json(error('Internal server error'));
         }
     })
 })
-
-// -- Passport Lichess --
-
-const domain = config.domain
-
-passport.use(new LichessStrategy({
-    clientID: gen_id(),
-    callbackURL: `${domain}/auth/lichess/callback`,
-    passReqToCallback: true
-}, async function (req: express.Request, accessToken: string, refreshToken: string, profile: any, cb: Function) {
-
-    let user = await service.upgrade_user_to_lichess(req.session.userId!, accessToken, profile.username)
-
-    user.unwrap(user => {
-        req.session.userId = user.id
-        cb(null, user)
-    }, err => cb(err))
-}))
-
-router.get('/auth/lichess', passport.authenticate('lichess'))
-
-router.get('/auth/lichess/callback', passport.authenticate('lichess', {
-    successRedirect: config.spa_domain,
-    failureRedirect: config.spa_domain 
-}))
-
 
 // -- Routes --
 
